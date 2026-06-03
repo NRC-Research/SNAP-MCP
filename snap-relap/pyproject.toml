@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "snap-relap-mcp"
+version = "0.1.0"
+description = "MCP server for RELAP5 input deck manipulation via SNAP Python API"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0",
+    "pydantic>=2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["snap_relap"]
+
+[project.scripts]
+snap-relap-mcp = "mcp_server:main"
