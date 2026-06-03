@@ -22,19 +22,19 @@ This repository contains three separate MCP servers, each wrapping a different S
 - **Status**: Production-ready.
 - **Location**: Root directory (`/`). Core logic resides in `snap_trace/` package. Entry point is `mcp_server.py`.
 - **Purpose**: Build, inspect, and export TRACE thermal-hydraulic models.
-- **Documentation**: See [snap_trace/README.md](file:///Users/cgg-mac/SNAP-MCP/snap_trace/README.md).
+- **Documentation**: See [snap_trace/README.md](./snap_trace/README.md).
 
 ### 2. `snap-relap` (RELAP5 MCP)
 - **Status**: Production-ready. Includes autonomous error-correction helper signatures.
 - **Location**: Subdirectory `snap-relap/`. Core logic is in the `snap_relap` package. Entry point is `snap-relap/mcp_server.py`.
 - **Purpose**: Build, validate, and export RELAP5 models.
-- **Documentation**: See [snap-relap/README.md](file:///Users/cgg-mac/SNAP-MCP/snap-relap/README.md).
+- **Documentation**: See [snap-relap/README.md](./snap-relap/README.md).
 
 ### 3. `snap-melcor` (MELCOR MCP)
 - **Status**: In development. Python wrappers auto-generated from Java source; stubs implemented.
 - **Location**: Subdirectory `snap-melcor/`. Core logic is in `snap-melcor` package. Entry point is `snap-melcor/mcp_server.py`.
 - **Purpose**: Inspect and modify MELCOR2X models.
-- **Documentation**: See `snap-melcor/README.md`.
+- **Documentation**: See [snap-melcor/README.md](./snap-melcor/README.md).
 
 ---
 
