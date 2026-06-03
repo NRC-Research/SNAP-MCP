@@ -250,8 +250,35 @@ def _python_model_check(model) -> tuple[list[str], list[str]]:
                         pass
     except Exception:
         pass
-        
     return errors, warnings
+
+
+_ERROR_HINTS = [
+    (
+        "Time Step cards have not been defined",
+        "Use set_model_options(model_id, 'timestep_table', [[100.0, 1e-6, 0.01, 3, 100, 1000, 1000]]) to define the transient time steps.",
+    ),
+    (
+        "Flow area has not been set",
+        "Set the component's flow area (e.g. set_component_property(model_id, cc, 'x_area', 0.073) for TDVs, or 'flow_area' for other volumes).",
+    ),
+    (
+        "X Length has not been set",
+        "Set the volume's length property (e.g. set_component_property(model_id, cc, 'x_length', 1.0)).",
+    ),
+    (
+        "Search Variable has not been set",
+        "Define search variables in the tdv_data table (make sure rows have the search variable column populated, e.g. set to 0.0 for time).",
+    ),
+]
+
+
+def _enrich_error(msg: str) -> str:
+    """Enrich validation errors with actionable tool guidance hints for agents."""
+    for pattern, hint in _ERROR_HINTS:
+        if pattern in msg:
+            return f"{msg}  [Fix: {hint}]"
+    return msg
 
 
 def _run_validation(model) -> tuple[list[str], list[str]]:
@@ -333,6 +360,9 @@ def _run_validation(model) -> tuple[list[str], list[str]]:
     py_errors, py_warnings = _python_model_check(model)
     errors.extend(py_errors)
     warnings.extend(py_warnings)
+
+    errors = [_enrich_error(e) for e in errors]
+    warnings = [_enrich_error(w) for w in warnings]
 
     return errors, warnings
 
