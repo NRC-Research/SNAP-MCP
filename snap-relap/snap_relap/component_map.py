@@ -85,3 +85,20 @@ def find_component(model, cc_num: int):
         except Exception:
             pass
     return None, None
+
+
+def iter_all_components(model) -> list[tuple[str, object]]:
+    """Yield (comp_type, component) for every component in the model."""
+    results = []
+    for comp_type, cfg in COMPONENT_MAP.items():
+        list_method = cfg.get("list")
+        if not list_method:
+            continue
+        try:
+            comps = _coerce_list(getattr(model, list_method)())
+            for comp in comps:
+                results.append((comp_type, comp))
+        except Exception:
+            pass
+    return results
+

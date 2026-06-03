@@ -6,7 +6,8 @@ import os
 import math
 
 from snap_relap import session as _session
-from snap_relap.component_map import COMPONENT_MAP, _coerce_list, find_component
+from snap_relap.component_map import COMPONENT_MAP, _coerce_list, find_component, iter_all_components
+
 
 
 def _get_cc(comp) -> int:
@@ -259,26 +260,74 @@ def _run_validation(model) -> tuple[list[str], list[str]]:
     warnings: list[str] = []
     java_model = model.java_model
 
+    # 1. Validation tests via reflection (equivalent to GUI checks like loops/trips)
     try:
-        messages = java_model.validate()
-        for msg in (messages or []):
-            text = str(msg)
-            if 'ERROR' in text.upper():
-                errors.append(text)
-            else:
-                warnings.append(text)
-    except AttributeError:
-        try:
-            with tempfile.NamedTemporaryFile(suffix='.inp', delete=False) as f:
-                tmp_path = f.name
-            result = model.export(tmp_path)
-            os.unlink(tmp_path)
-            if result is None:
-                errors.append("Export returned None — model likely has errors")
-        except Exception as exc:
-            errors.append(f"Validation via export failed: {exc}")
+        tests = java_model.getValidationTests()
+        for test in tests:
+            try:
+                test.runValidation(False)
+                display = str(test.getDisplayName())
+                cls = test.getClass()
+                field = None
+                while cls is not None and field is None:
+                    try:
+                        field = cls.getDeclaredField("errList")
+                    except Exception:
+                        cls = cls.getSuperclass()
+                if field is not None:
+                    field.setAccessible(True)
+                    err_list = field.get(test)
+                    if err_list is not None:
+                        for i in range(err_list.size()):
+                            errors.append(f"{display}: {err_list.get(i)}")
+            except Exception as te:
+                warnings.append(f"[{test.getClass().getSimpleName()} check failed: {te}]")
     except Exception as exc:
-        errors.append(f"Validation failed: {exc}")
+        warnings.append(f"[validation tests unavailable: {exc}]")
+
+    # 2. Redirect static Message stream to capture component and option errors/warnings
+    try:
+        from py4j.java_gateway import JavaGateway
+        jvm = JavaGateway(gateway_client=java_model._gateway_client).jvm
+        Message = jvm.com.cafean.client.ui.message.Message
+        baos = jvm.java.io.ByteArrayOutputStream()
+        ps = jvm.java.io.PrintStream(baos)
+        original = Message.getOutputStream()
+        Message.setOutputStream(ps)
+        try:
+            # Validate model options (e.g. missing Time Step cards)
+            try:
+                opts = model.model_options()
+                if opts is not None and hasattr(opts, "java_object"):
+                    opts.java_object.isOkayForExport(True)
+            except Exception:
+                pass
+
+            # Validate all components
+            for _ctype, comp in iter_all_components(model):
+                try:
+                    comp.java_object.isOkayForExport(True)
+                except Exception:
+                    pass
+        finally:
+            Message.setOutputStream(original)
+        ps.flush()
+        captured = str(baos.toString())
+        _seen_stream: set[str] = set()
+        for line in captured.split("\n"):
+            line = line.strip()
+            if "Error:" in line or "Warning:" in line or "Alert:" in line:
+                bracket = line.find("]")
+                if bracket >= 0 and line.startswith("["):
+                    line = line[bracket + 1:].strip()
+                if line and line not in _seen_stream:
+                    _seen_stream.add(line)
+                    if "Error:" in line:
+                        errors.append(line)
+                    else:
+                        warnings.append(line)
+    except Exception as exc:
+        warnings.append(f"[component stream check unavailable: {exc}]")
 
     # Supplement with Python-level checks
     py_errors, py_warnings = _python_model_check(model)

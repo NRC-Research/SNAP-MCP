@@ -48,7 +48,21 @@ def run_test():
     vol_creator = getattr(model, "create_single_volume")
     vol1 = vol_creator(101)
     vol2 = vol_creator(102)
+    # Configure required thermodynamic and geometric properties to satisfy validation checks
+    vol1.ic_input_format = 3
+    vol1.pressure = 1.013e5
+    vol1.temperature = 300.0
+    vol1.flow_area = 0.05
+    vol1.x_length = 1.0
     
+    vol2.ic_input_format = 3
+    vol2.pressure = 1.013e5
+    vol2.temperature = 300.0
+    vol2.flow_area = 0.05
+    vol2.x_length = 1.0
+    
+    junction.hydraulic_diameter = 0.25
+
     print("\nConnecting junction inlet and outlet...")
     # Inlet = CC 101, cell 1, face 2. Outlet = CC 102, cell 1, face 1
     # Connection string format: {cc}{cell:02d}000{face}

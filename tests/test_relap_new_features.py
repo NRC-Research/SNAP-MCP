@@ -283,7 +283,7 @@ def run_test():
         
     try:
         # Export model (verifies path conversion)
-        res = export_fn(model_id, tmp_inp)
+        res = export_fn(model_id, tmp_inp, force=True)
         print("Export relap response:", res)
         assert res["status"] == "ok"
         
