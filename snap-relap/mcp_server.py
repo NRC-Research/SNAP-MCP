@@ -18,6 +18,7 @@ except ImportError:
 from snap_relap.snap_env import init_snap_env
 from snap_relap.tools.model_tools import register_model_tools
 from snap_relap.tools.component_tools import register_component_tools
+from snap_relap.tools.connection_tools import register_connection_tools
 from snap_relap.tools.export_tools import register_export_tools
 
 mcp = FastMCP("snap-relap")
@@ -25,6 +26,7 @@ mcp = FastMCP("snap-relap")
 init_snap_env()
 register_model_tools(mcp)
 register_component_tools(mcp)
+register_connection_tools(mcp)
 register_export_tools(mcp)
 
 

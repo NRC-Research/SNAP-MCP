@@ -7,6 +7,94 @@ import os
 from snap_relap import session as _session
 
 
+def _python_model_check(model) -> tuple[list[str], list[str]]:
+    """Perform Python-level validation check for unconnected junctions and heat structures."""
+    errors = []
+    warnings = []
+    
+    # 1. Check junctions (SINGLE_JUNCTION, TIME_DEPENDENT_JUNCTION, VALVE, PUMP)
+    junction_getters = [
+        ("single_junctions", "Single Junction"),
+        ("time_dependent_junctions", "Time Dependent Junction"),
+        ("valves", "Valve"),
+        ("pumps", "Pump"),
+    ]
+    
+    from snap_relap.component_map import _coerce_list
+    
+    for getter, label in junction_getters:
+        try:
+            fn = getattr(model, getter, None)
+            if fn is not None:
+                comps = _coerce_list(fn())
+                for comp in comps:
+                    cc = -1
+                    for attr in ("getCCnumber", "number", "getComponentNumber"):
+                        try:
+                            v = getattr(comp, attr)
+                            cc = int(v() if callable(v) else v)
+                            break
+                        except Exception:
+                            pass
+                    
+                    # Check inlet
+                    try:
+                        inlet = getattr(comp, "inlet", None)
+                        if inlet is None or str(inlet).strip() in ("", "0", "0000000"):
+                            errors.append(f"{label} {cc}: inlet is unconnected")
+                    except Exception:
+                        pass
+                        
+                    # Check outlet
+                    try:
+                        outlet = getattr(comp, "outlet", None)
+                        if outlet is None or str(outlet).strip() in ("", "0", "0000000"):
+                            errors.append(f"{label} {cc}: outlet is unconnected")
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+            
+    # 2. Check heat structures
+    try:
+        fn = getattr(model, "heatstructs", None)
+        if fn is not None:
+            comps = _coerce_list(fn())
+            for comp in comps:
+                cc = -1
+                for attr in ("getCCnumber", "number", "getComponentNumber"):
+                    try:
+                        v = getattr(comp, attr)
+                        cc = int(v() if callable(v) else v)
+                        break
+                    except Exception:
+                        pass
+                
+                # Check left and right boundary cell references
+                for face in ("left", "right"):
+                    try:
+                        face_list = getattr(comp, face, None)
+                        if face_list is not None:
+                            # face_list is list of boundary cell objects
+                            for idx in range(len(face_list)):
+                                try:
+                                    bcell = face_list[idx].bcell
+                                    ref = bcell.reference
+                                    if ref is None or str(ref).strip() in ("", "0", "0000000"):
+                                        # Warn that it's unconnected
+                                        warnings.append(
+                                            f"Heat Structure {cc} cell {idx + 1} {face} boundary is unconnected (insulated)"
+                                        )
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+        
+    return errors, warnings
+
+
 def register_export_tools(mcp) -> None:
 
     @mcp.tool()
@@ -47,6 +135,11 @@ def register_export_tools(mcp) -> None:
                 errors.append(f"Validation via export failed: {exc}")
         except Exception as exc:
             errors.append(f"Validation failed: {exc}")
+
+        # Supplement with Python-level checks
+        py_errors, py_warnings = _python_model_check(model)
+        errors.extend(py_errors)
+        warnings.extend(py_warnings)
 
         return {
             "valid": len(errors) == 0,
