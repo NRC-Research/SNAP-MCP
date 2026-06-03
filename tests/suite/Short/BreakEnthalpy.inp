@@ -1,0 +1,173 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    Short
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+**************
+* main data  *
+**************
+*
+*      ieos set to give air-water calculation (all steam suppressed)
+*       numtcr          ieos         inopt          nmat
+             1             0             1             0
+test fill/break flow enthalpy single phase liquid
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  nhtstr=0, ioinp=1, ioout=0, graphLevel = 'full', idiag = 1,
+ &end
+*
+*        dstep         timet
+             0     0.000e+00
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             5             4             0
+*         epso          epss
+        1.0e-4        1.0e-4
+*       oitmax        sitmax        isolut        ncontr
+            10            20             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             1             0             0             0             0
+*
+* component numbers
+* iorder*    1   2   3   4   5 e
+*
+* signal variables
+*   idsv   isvn   ilcn   icn1   icn2
+        1     0      0      0      0
+*
+*******   type           num            id        ctitle
+break                      1             1 fw inlet bc
+*         jun1          ibty          isat          ioff
+             1             0             0             0
+*         dxin         volin         alpin           tin           pin
+    8.2913e+00    1.3929e-02            0.    3.4270e+02    4.1000e+02
+*         pain        concin          rbmx          poff          belv
+    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00            0.
+*
+*******   type           num            id        ctitle
+pipe                       2             2 inlet pipe
+*       ncells         nodes          jun1          jun2          epsw
+             1             0             1             2    0.0000e+00
+*         ichf         iconc      pipeType          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00
+*       toutv1
+    0.0000e+00
+*
+* dx    * r01  8.2913e+00 e
+* vol   * r01  1.3929e-02 e
+* fa    * f    1.6800e-03 e
+* fric  * f    0.0000e+00 e
+* grav  * f    0.0000e+00 e
+* hd    * f    4.6250e-02 e
+* nff   * f     -1  e
+* alp   * f    0.0000e+00 e
+* vl    * f    1.0000e+01 e
+* vv    * f    1.0000e+01 e
+* tl    * f    3.4270e+02 e
+* tv    * f    3.4270e+02 e
+* p     * f    4.0000e+02 e
+* pa    * f    0.0000e+00 e
+*
+*******   type           num            id        ctitle
+pipe                       3             3 heater u-tube bank
+*       ncells         nodes          jun1          jun2          epsw
+             8             3             2             3    0.0000e+00
+*         ichf         iconc      pipeType          ipow
+             0             0             0             0
+*       iqp3tr        iqp3sv        nqp3tb        nqp3sv        nqp3rf
+             0             1            -4             0             0
+*        radin            th         houtl         houtv         toutl
+    2.3125e-02    2.9170e-03    0.0000e+00    0.0000e+00    0.0000e+00
+*       toutv1
+    0.0000e+00
+*        qp3in        qp3off        rqp3mx        qp3scl         nhcom
+    1.70607E+05    1.5652E+05    1.0000e+05    1.0900e+00             0
+*
+* dx    * r08  8.2913e+00 e
+* vol   * r08  1.3929e-02 e
+* fa    * f    1.6800e-03 e
+* fric  * f    0.0000e+00 e
+* grav  * f    0.0000e+00 e
+* hd    * f    4.6250e-02 e
+* nff   * f     -1  e
+* alp   * f    0.0000e+00 e
+* vl    * f    1.0000e+01 e
+* vv    * f    1.0000e+01 e
+* tl    * f    3.4270e+02 e
+* tv    * f    3.4270e+02 e
+* p     * f    4.0000e+02 e
+* pa    * f    0.0000e+00 e
+* qppp  * f    1.0000e+00 e
+* matid * f    6 e
+* tw    * f    3.8000e+02 e
+* qp3tb *      0.0000e+00      1.5652e+05s
+* qp3tb *      5.0000e+01      1.5652e+05s
+* qp3tb *      6.0000e+01      3.1304e+05s
+* qp3tb *      1.0000e+02      3.1304e+05 e
+*
+*
+*******   type           num            id        ctitle
+pipe                       4             4 outlet pipe
+*       ncells         nodes          jun1          jun2          epsw
+             1             0             3             4    0.0000e+00
+*         ichf         iconc      pipeType          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00
+*       toutv1
+    0.0000e+00
+*
+* dx    * r01  8.2913e+00 e
+* vol   * r01  1.3929e-02 e
+* fa    * f    1.6800e-03 e
+* fric  * f    0.0000e+00 e
+* grav  * f    0.0000e+00 e
+* hd    * f    4.6250e-02 e
+* nff   * f     -1  e
+* alp   * f    0.0000e+00 e
+* vl    * f    1.0000e+01 e
+* vv    * f    1.0000e+01 e
+* tl    * f    3.4270e+02 e
+* tv    * f    3.4270e+02 e
+* p     * f    4.0000e+02 e
+* pa    * f    0.0000e+00 e
+*
+*******   type           num            id        ctitle
+fill                       5             5 fw outlet bc
+*         jun1          ifty          ioff
+             4             2             0
+*       twtold          rfmx        concin          felv
+    0.0000e+00    1.0000e+06    0.0000e+00            0.
+*         dxin         volin         alpin          vlin          tlin
+    8.2913e+00    1.3929e-02            0.    0.0000e+00    3.4270e+02
+*          pin          pain        flowin          vvin          tvin
+    4.1000e+02            0.       7936.64    0.0000e+00    3.4270e+02
+*
+*
+end
+******************* TIME DATA CARD
+*
+*   dtmin    |    dtmax    |     tend    |     rtwfp   |
+   0.000001        0.25           100.0         1000.0
+*
+*   edint    |    gfint    |    dmpint   |    sedint   |
+     50.0          .25          50.0       50.0
+*
+  -1.0000e+00

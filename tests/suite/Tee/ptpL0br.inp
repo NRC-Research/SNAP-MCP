@@ -1,0 +1,220 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart>ptpL0b</Restart>
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    LiqTee
+#    Tee
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             6             0             1             0             0
+=>
+=> A tee with inflow from the side leg, to a single cell primary leg.
+=> 2 cell pipes are connected to each end of the tee primary to test
+=> match to results of the teeL0 test problem.
+=> This is configured so that the outlet pipe controls its junctions
+=> Tee connections reversed to alter velocity sign conventions
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  iadded=20,
+  noair=0,
+  use_IAPWS_st=.TRUE.,
+  usesjc=3
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             6             5             1
+*         epso          epss
+        1.0E-5        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             0             0             0             0             0
+*
+*************************
+* component-number data *
+*************************
+*
+*  Component input order (IORDER)
+*-- type ---- num ------------- name ----------------  +    jun1   jun2   jun3
+* FILL     *    100 s * mass flow bc                   +     201
+* FILL     *    101 s * mass flow bc                   +     303
+* BREAK    *    201 s * side leg one bc                +     202
+* PIPE     *    700 s * inlet end main leg             +     201     10
+* TEE      *    701 s * the tee                        +      20     10    303
+* PIPE     *    702 e * outlet end main leg            +      20    202
+*
+*
+*******   type           num        userid                component name
+break                    201             1                side leg one bc
+*         jun1          ibty          isat          ioff      adjpress
+           202             0             0             0             0
+*         dxin         volin         alpin           tin           pin
+           2.5          0.75           0.0         300.0         1.0E5
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0           0.0           0.0           0.0
+*
+*
+*******   type           num        userid                component name
+pipe                     702             1            outlet end main leg
+*       ncells         nodes          jun1          jun2          epsw
+             2             0            20           202           0.0
+*       nsides
+             0
+*         ichf         iconc      pipetype          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv          pwin         pwoff         rpwmx         pwscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *          2.5         2.5e
+* vol   *         0.75        0.75e
+* fa    *          0.3         0.3         0.3e
+* fric  *       1.0E-6      1.0E-6      1.0E-6e
+* grav  *          0.0         0.0         0.0e
+* hd    *          1.0         1.0         1.0e
+* nff   *            0           0           0e
+* alp   *          0.0         0.0e
+* vl    *          2.0         2.0         2.0e
+* vv    *          0.0         0.0         0.0e
+* tl    *        300.0       300.0e
+* tv    *        300.0       300.0e
+* p     *        1.0E5       1.0E5e
+* pa    *          0.0         0.0e
+*
+*
+*******   type           num        userid                component name
+pipe                     700             1             inlet end main leg
+*       ncells         nodes          jun1          jun2          epsw
+             2             0           201            10           0.0
+*       nsides
+             0
+*         ichf         iconc      pipetype          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv          pwin         pwoff         rpwmx         pwscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *          1.5         1.5e
+* vol   *         0.15        0.15e
+* fa    *          0.1         0.1         0.1e
+* fric  *       1.0E-6      1.0E-6      1.0E-6e
+* grav  *          0.0         0.0         0.0e
+* hd    *          1.0         1.0         1.0e
+* nff   *            0           0           0e
+* alp   *          0.0         0.0e
+* vl    *          1.0         1.0         1.0e
+* vv    *          0.0         0.0         0.0e
+* tl    *        300.0       300.0e
+* tv    *        300.0       300.0e
+* p     *        1.0E5       1.0E5e
+* pa    *          0.0         0.0e
+*
+*
+*******   type           num        userid                component name
+tee                      701            0                         the tee
+*        jcell         nodes          ichf          cost          epsw
+             1             0             0          -1.0           0.0
+*       iconc1        ncell1          jun1          jun2         ipow1
+             0             1            20            10             0
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv          pwin         pwoff         rpwmx         pwscl
+           0.0           0.0           0.0           0.0           0.0
+*       iconc2        ncell2          jun3         ipow2
+             0             2           303             0
+*        radin2           th2        houtl2        houtv2        toutl2
+           0.0           0.0           0.0           0.0           0.0
+*        toutv2         pwin2        pwoff2        rpwmx2        pwscl2
+           0.0           0.0           0.0           0.0           0.0
+* dx1   *          2.0e
+* vol1  *          0.6e
+* fa1   *          0.3         0.1e
+* fric1 *       1.0E-6      1.0E-6e
+* grav1 *          0.0         0.0e
+* hd1   *          1.0         1.0e
+* nff1  *            0           0e
+* alp1  *          0.0e
+* vl1   *         -2.0        -1.0e
+* vv1   *          0.0         0.0e
+* tl1   *        300.0e
+* tv1   *        300.0e
+* p1    *        1.0E5e
+* pa1   *          0.0e
+* dx2   *          0.5         0.5e
+* vol2  *          0.1         0.1e
+* fa2   *          0.2         0.2         0.2e
+* fric2 *       1.0E-6      1.0E-6      1.0E-6e
+* grav2 *          0.0         0.0         0.0e
+* hd2   *          1.0         1.0         1.0e
+* nff2  *            0           0           0e
+* alp2  *          0.0         0.0e
+* vl2   *         -2.5        -2.5        -2.5e
+* vv2   *          0.0         0.0         0.0e
+* tl2   *        370.0       370.0e
+* tv2   *        370.0       370.0e
+* p2    *        1.0E5       1.0E5e
+* pa2   *          0.0         0.0e
+*
+*
+*******   type           num        userid                component name
+fill                     100             1                   mass flow bc
+*         jun1          ifty          ioff
+           201             1             0
+*       twtold          rfmx        concin          felv
+           0.0           1.0           0.0           0.0
+*         dxin         volin         alpin          vlin          tlin
+           1.5          0.15           0.0           1.0         300.0
+*          pin          pain        flowin          vvin          tvin
+         1.0E5           0.0           0.0           1.0         300.0
+*
+*
+*******   type           num        userid                component name
+fill                     101             1                   mass flow bc
+*         jun1          ifty          ioff
+           303             1             0
+*       twtold          rfmx        concin          felv
+           0.0           1.0           0.0           0.0
+*         dxin         volin         alpin          vlin          tlin
+           0.5           0.1           0.0           2.5         370.0
+*          pin          pain        flowin          vvin          tvin
+         1.0E5           0.0           0.0           2.5         370.0
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+           0.1           0.1           1.0           1.0
+*        edint         gfint        dmpint        sedint
+         100.0           0.5         200.0           5.0
+*
+*      endflag
+          -1.0

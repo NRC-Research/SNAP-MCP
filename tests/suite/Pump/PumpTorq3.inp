@@ -1,0 +1,247 @@
+free format
+#<Regression>
+#  <Author>JaySpore</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    ConSys
+#    Pump
+#    Backup
+#  </Suites>
+#  <FailureMode />
+#  <Purpose>
+#     pump motor torque test problem - IPMPTY = 3.
+#     This test is identical to PumpTorq2 with the added feature
+#     that IPMPTR points to trip 1.  Initial motor torque will be
+#     1000 N-m before trip and then 500 N-m after trip.
+#  </Purpose>
+#  <PermutationOf>
+#     PumpTorq2
+#  </PermutationOf>
+#  <SuccessCriteria>
+#    <Test name="PumpTorque">
+#      <Description></Description>
+#      <Assertion times="-1.0" eps="0.1%">
+#           x = mod : PumpTorq2 : torque-700
+#           y = mod : self : torque-700
+#           assert x == y
+#      </Assertion>
+#    </Test>
+#  </SuccessCriteria>
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             8             0             1             0             0
+*-*-*TEST PROBLEM PumpTorq3
+*******************************************
+pump motor torque test problem
+*******************************************
+*
+*  This test is identical to PumpTorq2 with the added feature
+*  that IPMPTR points to trip 1.  Initial motor torque will be
+*  1000 N-m before trip and then 500 N-m after trip.
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  cpuflg=1,
+  iadded=10,
+  icflow=2,
+  idiag=4,
+  ikfac=1,
+  noair=0,
+  nsdl=0,
+  nsdu=5,
+  nspl=0,
+  nspu=5,
+  use_IAPWS_st=.TRUE.,
+  usesjc=3,
+  graphlevel='full',
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             3             2             1
+*         epso          epss
+        1.0E-5        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             3             1             0             1             0
+*
+*************************
+* component-number data *
+*************************
+*
+*  Component input order (IORDER)
+*-- type ---- num ------------- name ----------------  +    jun1   jun2   jun3
+* PUMP     *    700 s * pump no. 2                     +     701    702
+* BREAK    *    701 s * bottom break                   +     701
+* BREAK    *    702 e * bottom break                   +     702
+*
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             1             0             0             0             0
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             2             9           700             0             0
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             3            -9           700             0             0
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*
+*
+*********************************************
+* Starting Control System Section of Model  *
+*********************************************
+*
+****** Control Blocks ******
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -680             9             0             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+           1.0        -1.0E4         1.0E4         500.0        1000.0
+*
+*********************************************
+* Finished Control System Section of Model  *
+*********************************************
+*
+*
+*
+*
+***********************************
+* Starting Trip Section of Model  *
+***********************************
+*
+*         Trip Storage Count Card
+*         ntse          ntct          ntsf          ntdp          ntsd
+             0             0             0             0             0
+*
+*trip                      1
+*         idtp          isrt          iset          itst          idsg
+             1             2             0             1             1
+*      setp(1)       setp(2)
+          20.0         20.01
+*      dtsp(1)       dtsp(2)
+           0.0           0.0
+*      ifsp(1)       ifsp(2)
+             0             0
+*
+**********************************
+* Finished Trips: Starting Extras*
+**********************************
+*
+**********************************
+* Finished Trip Section of Model *
+**********************************
+*
+*
+*
+*
+*******   type           num        userid                component name
+pump                     700             1                     pump no. 2
+*       ncells         nodes          jun1          jun2          epsw
+             2             4           701           702           0.0
+*       nsides
+             0
+*         ichf         iconc        ipmpty           irp           ipm
+             0             0             3             1             1
+*       ipmptr        ipmpsv        npmptb        npmpsv        npmprf
+             1          -680             0             0             0
+*       npmpmt       motorTI       motorTO
+             2        1000.0           0.0
+*        iqptr         iqpsv         nqptb         nqpsv         nqprf
+             0             0             0             0             0
+*        radin            th         houtl         houtv         toutl
+        1.4595     7.7136E-3           0.0           0.0           0.0
+*        toutv         effmi
+           0.0        317.44
+*         tfr0          tfr1          tfr2          tfr3          tfrb
+           0.0           0.0           0.0           0.0           0.0
+*        tfr0l         tfrl1         tfrl2         tfrl3
+           0.0           0.0           0.0           0.0
+*        rhead         rtork         rflow          rrho        romega
+         382.0         500.0        22.087         770.0         370.0
+*       omegan        omgoff        romgmx        omgscl        npmpsd
+         310.0           0.0           0.0           0.0             0
+*         qpin          qpoff        rqpmx         qpscl         nhcom
+           0.0           0.0           0.0           0.0             0
+*       option
+             2
+* dx    *          0.3         0.3e
+* vol   *         0.09        0.09e
+* fa    *          0.3         0.3         0.3e
+* kfac  *       9.0E-3      9.0E-3      9.0E-3e
+* grav  *          0.0         0.0         0.0e
+* hd    *          0.1         0.1         0.1e
+* icflg *            0           0           0e
+* nff   *            0           0           0e
+* alp   *          0.0         0.0e
+* vl    *          0.0         0.0         0.0e
+* vv    *          0.0         0.0         0.0e
+* tl    *        373.0       373.0e
+* tv    *        373.0       373.0e
+* p     *        1.0E6       1.0E6e
+* pa    *          0.0         0.0e
+* qpp   *         0.0         0.0         0.0         0.0         0.0s
+* qpp   *         0.0         0.0         0.0e
+*  matr *   f 7e
+* tw    *       373.0       373.0       373.0       373.0       373.0s
+* tw    *       373.0       373.0       373.0e
+* pmptm *          0.0         0.0       1.0E4       1.0E4e
+*
+*
+*******   type           num        userid                component name
+break                    702             1                   bottom break
+*         jun1          ibty          isat          ioff      adjpress
+           702             0             0             0             0
+*         dxin         volin         alpin           tin           pin
+           0.3          0.09           0.0         373.0         1.0E6
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0           0.0           0.0           0.0
+*
+*
+*******   type           num        userid                component name
+break                    701             1                   bottom break
+*         jun1          ibty          isat          ioff      adjpress
+           701             0             0             0             0
+*         dxin         volin         alpin           tin           pin
+           0.3          0.09           0.0         373.0         1.0E6
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0           0.0           0.0           0.0
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+        1.0E-6           5.0         800.0        1000.0
+*        edint         gfint        dmpint        sedint
+           5.0           0.1         200.0           5.0
+*
+*      endflag
+          -1.0

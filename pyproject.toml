@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "snap-trace-mcp"
+version = "0.1.0"
+description = "MCP server for TRACE input deck generation via SNAP Python API"
+requires-python = ">=3.9"
+dependencies = [
+    "mcp[cli]>=1.0",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+snap-trace-mcp = "mcp_server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["snap_trace"]

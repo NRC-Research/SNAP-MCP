@@ -1,0 +1,207 @@
+free format
+#<Regression>
+# <Author>Jay Spore</Author>
+# <Format>TRACE</Format>
+# <Restart />
+# <ParallelCases />
+# <SupportFiles />
+# <Suites>
+#   Pump
+# </Suites>
+# <FailureMode />
+# <Purpose>
+#    Same as test problem PumpTyp0, except NPMPSD was changed from -1 to 2.
+#    Signal variable 2 is trip status for trip 11.
+#    Trip 11 is initially off, then goes on at 100 secs and then off again at 300 secs.
+# </Purpose>
+# <PermutationOf>PumpTyp0</PermutationOf>
+# <SuccessCriteria>
+#     <Test name="Pump Type 0 - Test 2">
+#        <Description>
+#          Check to see if PUMP IPMPTY = 0 behaves as expected when trip is
+#          off, then on, then off.  When trip is off, flow (and fluid velocity) should
+#          be zero.
+#        </Description>
+#        <Assertion times="99.0" eps="0.01">
+#           x = mod : self : vln-13A02
+#           y = mod : self : flow-13
+#           z = mod : self : sv2
+#           assert x == 0.0
+#           assert y == z
+#        </Assertion>
+#        <Assertion times="200.0" eps="0.01%">
+#           x = mod : self : vln-13A02
+#           y = mod : self : flow-13
+#           assert x == 14.0
+#           assert y == 7.0
+#        </Assertion>
+#        <Assertion times="310.0" eps="0.01">
+#           x = mod : self : vln-13A02
+#           y = mod : self : flow-13
+#           z = mod : self : sv2
+#           assert x == 0.0
+#           assert y == z
+#        </Assertion>
+#     </Test>
+# </SuccessCriteria>
+#</Regression>
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat
+            1             0             1             0
+* PUMP trip test
+*
+*                               #########     ##########
+*                         j14   # pipe  # j13 # Pump13 #
+*                               #   2   #     #        #
+*                               #########     ##########
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  cpuflg=1, graphLevel='full', use_IAPWS_st=.TRUE.
+ &end
+*
+*        dstep         timet
+             0    0.0000e+00
+*       stdyst        transi         ncomp          njun          ipak
+             0             1            2             2             0
+*         epso          epss
+    1.0000e-04    1.0000e-04
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             1             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             2             1            0             1             1
+*
+*************************
+* component-number data *
+*************************
+*
+* iorder*             14s     * pipe
+* iorder*             13e     * pump
+*
+**************************
+* control-parameter data *
+**************************
+* signal variables
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             1             0             0             0             0
+             2            56            11             0             0
+*
+*         idcb          icbn          icb1          icb2          icb3
+            -1             9             0             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+           1.0       -1.0E20        1.0E20           6.5           0.0
+*
+* trips
+*         ntse          ntct          ntsf          ntdp          ntsd
+             0             0             0             0             0
+*
+*        idtp          isrt          iset,0=off     itst          idsg
+           11             4             0             1             1
+*      setp(1)       setp(2)      setp(3)       setp(4)
+          0.0         100.0        200.0         300.0
+*      dtsp(1)       dtsp(2)
+          0.0           0.0          0.0           0.0
+*      ifsp(1)       ifsp(2)
+            0             0            0             0
+******************
+* component data *
+******************
+*
+*******   type           num            id        ctitle
+pipe                      14            14     pipe-to-pump
+*       ncells         nodes          jun1          jun2          epsw
+             2             0            14            13          0.0
+*         ichf         iconc      pipeType          ipow
+             0             0             0             0
+*        radin            th         houtl         houtv         toutl
+    5.0000e-01    5.0000e-02    0.0000e+00    0.0000e+00    5.0000e+02
+*        toutv
+    5.0000e+02
+*
+* dx    * f   5.0   e
+* vol   * f   2.5   e
+* fa    * f   0.5   e
+* fric  * f    2.   e
+* grav  * f   0.0e
+* hd    * f   1.12838 e
+* nff   * f           -1e
+* alp   * f   0.0 e
+* vl    * f   9.0544  e
+* vv    * f   9.0544  e
+* tl    * f   300.0 e
+* tv    * f   300.0 e
+* p     * f   7.0e6 e
+* pa    * f   0.0 e
+*
+*******   type           num            id        ctitle
+pump                      13            13 $13$ int-loop pump
+*2      ncells         nodes          jun1          jun2          epsw
+             2             0            13           14    0.0000e+00
+*3        ichf         iconc        ipmpty           irp           ipm
+             0             0             0             1             2
+*4      ipmptr        ipmpsv        npmptb        npmpsv        npmprf
+            11             1             2             0             0
+*6       radin            th         houtl         houtv         toutl
+    6.8000e-01    2.0000e-01    0.0000e+00    0.0000e+00    3.0000e+02
+*7        toutv         effmi
+    3.0000e+02         3460.0
+*8        tfr0          tfr1          tfr2          tfr3          tfrb
+           0.0           0.0           6.7           0.0           0.0
+*9       tfrl0         tfrl1         tfrl2         tfrl3
+           0.0           0.0           0.0           0.0
+*12      rhead         rtork         rflow          rrho        romega
+    8.4300e+02    4.2850e+04          5.65        999.53    1.2440e+02
+*13     omegan        omgoff        romgmx        omgscl        npmpsd
+    1.2440e+02    1.0000e+02         100.0    1.0000e+00             2
+*15     option 1=SemiScale, 2=LOFT, 3=Bingham, 4=Westinghouse
+             4
+*
+* 43   nhdm  ntdm
+         4     5
+*44    alpha nhdm
+      0.0  0.0   0.2 0.8s
+      0.9  0.0   1.0 0.0e
+*45    alpha ntdm
+      0.0  0.0   0.2  .3s
+      0.5  0.5   0.8 0.3s
+      1.0  0.0 e
+* dx    * f   5.0   e
+* vol   * f   2.5   e
+* fa    * f   0.5   e
+* fric  *  2.0 0.0  2.0  e
+* grav  * 0.0 f   0.0   e
+* hd    * f   1.12838 e
+* nff   * f            -1e
+* alp   * f   0.0 e
+* vl    * f    9.0544  e
+* vv    * f    9.0544  e
+* tl    * f   300.0 e
+* tv    * f   300.0 e
+* p     * 7.0e6   7.0041e6 e
+* pa    * f   0.0000e+00e
+* pmptb     sec    pump volumetric flow m^3/s
+           0.0      7.0 s
+   1000.0      7.0 e
+*
+end
+*
+******************
+* time-step data *
+******************
+*
+*        dtmin         dtmax          tend         rtwfp
+         1.0e-06         0.1         499.8    1.0000e+00
+*        edint         gfint        dmpint        sedint
+           50.        2.0e-6    3.9000e+03    3.8000e+03
+*
+*      endflag
+   -1.0000e+00
+

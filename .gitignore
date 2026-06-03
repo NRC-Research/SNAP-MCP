@@ -1,0 +1,20 @@
+# External reference material — not part of this project
+SNAP-TRACE-plugin/
+SNAP-CAFEAN-API/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Runtime data
+.snap_trace/
+
+# Claude local settings
+.claude/settings.local.json
+.DS_Store

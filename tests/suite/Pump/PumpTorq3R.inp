@@ -1,0 +1,157 @@
+free format
+#<Regression>
+#  <Author>JaySpore</Author>
+#  <Format>TRACE</Format>
+#  <Restart>PumpTorq3</Restart>
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    ConSys
+#    Pump
+#  </Suites>
+#  <FailureMode />
+#  <Purpose>
+#     pump motor torque test problem - IPMPTY = 3.
+#     Restarts from PumpTorq3 at time zero.  If time zero restart
+#     dump is good then PumpTorq3 and PumpTorq3R should be the same.
+#  </Purpose>
+#  <PermutationOf>
+#     PumpTorq3
+#  </PermutationOf>
+#  <SuccessCriteria>
+#    <Test name="PumpRotationalVelocity">
+#      <Description></Description>
+#      <Assertion times="-1.0" eps="0.1%">
+#           x = mod : PumpTorq3 : omegan-700
+#           y = mod : self : omegan-700
+#           assert x == y
+#      </Assertion>
+#    </Test>
+#  </SuccessCriteria>
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             8             0             1             0             0
+*-*-*TEST PROBLEM PumpTorq3R
+*******************************************
+pump motor torque test problem
+*******************************************
+*
+*  This test is a restart from PumpTorq3
+*  time zero restart dump.
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  cpuflg=1,
+  iadded=10,
+  icflow=2,
+  idiag=4,
+  ikfac=1,
+  noair=0,
+  nsdl=0,
+  nsdu=5,
+  nspl=0,
+  nspu=5,
+  use_IAPWS_st=.TRUE.,
+  usesjc=3,
+  graphlevel='full',
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             3             2             1
+*         epso          epss
+        1.0E-5        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             3             1             0             1             0
+*
+*************************
+* component-number data *
+*************************
+*
+*  Component input order (IORDER)
+*-- type ---- num ------------- name ----------------  +    jun1   jun2   jun3
+* PUMP     *    700 s * pump no. 2                     +     701    702
+* BREAK    *    701 s * bottom break                   +     701
+* BREAK    *    702 e * bottom break                   +     702
+*
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             0
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*
+*
+*********************************************
+* Starting Control System Section of Model  *
+*********************************************
+*
+****** Control Blocks ******
+*
+*         idcb          icbn          icb1          icb2          icb3
+             0
+*
+*********************************************
+* Finished Control System Section of Model  *
+*********************************************
+*
+*
+*
+*
+***********************************
+* Starting Trip Section of Model  *
+***********************************
+*
+*         Trip Storage Count Card
+*         ntse          ntct          ntsf          ntdp          ntsd
+             0             0             0             0             0
+*
+*trip                      1
+*         idtp          isrt          iset          itst          idsg
+             0
+*
+**********************************
+* Finished Trips: Starting Extras*
+**********************************
+*
+**********************************
+* Finished Trip Section of Model *
+**********************************
+*
+*
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+        1.0E-6           5.0         800.0        1000.0
+*        edint         gfint        dmpint        sedint
+           5.0           0.1         200.0           5.0
+*
+*      endflag
+          -1.0

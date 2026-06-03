@@ -1,0 +1,151 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    Valve
+#    Backup
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             1             0             1             0             0
+*
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  dtstrt=-1.0,
+  icflow=2,
+  ikfac=1,
+  iogrf=0,
+  usesjc=3,
+  xtvres=8
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             3             2             0
+*         epso          epss
+        1.0E-4        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             1             0             0             0             0
+*
+*************************
+* component-number data *
+*************************
+*
+*  Component input order (IORDER)
+*-- type ---- num ------------- name ----------------  +    jun1   jun2   jun3
+* BREAK    *      1 s * Linea de vapor                 +       1
+* VALVE    *     21 s * Valvula SD 538                 +       1      3
+* BREAK    *    101 e * Linea de vapor                 +       3
+*
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             1             0             0             0             0
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*
+*
+*******   type           num        userid                component name
+break                      1             1                 Linea de vapor
+*         jun1          ibty          isat          ioff      adjpress
+             1             0             3             1             0
+*         dxin         volin         alpin           tin           pin
+           0.1         1.0E5           1.0       547.204     6.60000E6
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0        1.0E20           0.0           0.0
+*
+*
+*******   type           num        userid                component name
+valve                     21             1                 Valvula SD 538
+*       ncells         nodes         jun1         jun2         epsw
+             2             0            1            3       4.0E-5
+*       nsides
+             0
+*         ichf         iconc          ivty          ivps         nvtb2
+             1             0             1             2             0
+*         ivtr          ivsv         nvtb1          nvsv          nvrf
+             0             1             5             0             0
+*       ivtrov        ivtyov
+             0             0
+*         rvmx          rvov        fminov        fmaxov
+           1.0           1.0           0.0           1.0
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         avlve         hvlve        favlve          xpos
+           0.0      9.252E-3         0.243           0.0           0.0
+* dx    *         0.25        0.25e
+* vol   *      0.04075     0.04075e
+* fa    *  0.046376976       0.163       0.163e
+* kfac  *      1.0E-19     1.0E-19     1.0E-19e
+* grav  *          0.0         0.0         0.0e
+* hd    *   0.24299998      0.4556      0.4556e
+* icflg *            0           1           0e
+* nff   *            1           1           1e
+* alp   *          1.0         1.0e
+* vl    *          0.0         0.0         0.0e
+* vv    *          0.0         0.0         0.0e
+* tl    *      547.204     372.756e
+* tv    *      547.204     372.756e
+* p     *    5.86048E6       1.0E5e
+* pa    *          0.0         0.0e
+0.0      0.000000   s
+5.0      0.000000   s
+7.0      1.000000   s
+10.0     1.000000   s
+12.0     0.000000   e
+*
+*
+*******   type           num        userid                component name
+break                    101             1                 Linea de vapor
+*         jun1          ibty          isat          ioff      adjpress
+             3             0             3             1             0
+*         dxin         volin         alpin           tin           pin
+           0.1         1.0E5           1.0       372.756         1.0E5
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0         1.0E6           0.0           0.0
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+       1.0E-10           0.1          15.0          10.0
+*        edint         gfint        dmpint        sedint
+         100.0           0.1         100.0           1.0
+*
+*      endflag
+          -1.0

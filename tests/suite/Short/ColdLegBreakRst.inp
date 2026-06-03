@@ -1,0 +1,118 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart>ColdLegBreak</Restart>
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    OffTake
+#    Short
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria>
+#    <Test name="MFR ColdLegBreak Restart">
+#      <Description></Description>
+#      <Assertion times="300.5,-1.0" eps="0.0">
+#           x = mod : ColdLegBreak : rvmf-29A05
+#           y = mod : self : rvmf-29A05
+#           assert x == y
+#      </Assertion>
+#    </Test>
+#  </SuccessCriteria>
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat
+             1             0             1             0
+Cold leg small break TEE component.
+*
+*   #########  ##################  #########
+*   # break #  # tee   #   29   #  # break #
+*   # 25    #25#   1   #    2   #29# 30    #
+*   #########  ##################  #########
+*              #       #
+*              #   3   #
+*              #########
+*                 229
+*              #########
+*              # break #
+*              # 229   #
+*              #########
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+   fdfhl=1.0, iadded=100, iblaus=0, icflow=2, ikfac=1,
+    imfr=3, nfrc1=2, nlt=11, noair=0, idiag = 1,
+    nrslv=1, usesjc=3, iofftk=1, closest = .TRUE.,
+ &end
+*
+*        dstep         timet
+          6249   -1.0000e+00
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             4             3             1
+*         epso          epss
+    1.0000e-04    1.0000e-04
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            25            10             1            0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             1             0             0             1             1
+*
+*************************
+* component-number data *
+*************************
+*
+*iorder*                29 s   * Cold leg small break tee
+*iorder*                25 s   * Cold leg left BC
+*iorder*                30 s   * Cold leg right BC
+*iorder*               229 e   * Atmospheric BC
+*
+**************************
+* control-parameter data *
+**************************
+*
+* signal variables
+*
+             0             0             0             0             0
+*
+* control blocks
+*
+*trip-dimension variables data
+*ntse    ntct     ntsf     ntdp     ntsd
+ 0       0        0        0        0
+*
+*trip-defining variables data
+*idtp   isrt    iset    itst    idsg
+*       setp(i),i=1,nsp
+*       dtsp(i),i=1,nsp
+*       ifsp(i),i=1,nsp
+*
+*      always true trip (off-on)
+ 0
+*
+******************
+* component data *
+******************
+*
+end
+*
+******************
+* time-step data *
+******************
+*
+*    dtmin     dtmax     tend    rtwfp
+   1.0e-07     0.05       500.0    10.0
+*    edint     gfint     dmpint  sedint
+   500.0       3.0      100.0     900.0
+*
+*      endflag
+   -1.0000e+00

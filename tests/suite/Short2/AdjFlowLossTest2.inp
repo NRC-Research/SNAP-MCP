@@ -1,0 +1,2189 @@
+free format
+#<Regression>
+#  <Author>Milos Kyncl</Author>
+#  <Format>TRACE</Format>
+#  <Restart>AdjFlowLossTest1</Restart>
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    Short2
+#    AddLoss
+#    Proprietary
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*m: SNAP:Symbolic Nuclear Analysis Package,  Version 2.4.1, September 24, 2015
+*m: PLUGIN:TRACE Version 3.5.0
+*m: CODE:TRACE V 5.0 Patch 4
+*m: DATE:10/2/15
+*
+*  The sensitivity of this model is unknown.  It was submitted by a CAMP user
+*  but was not specifically identified as confidential.  Treat as proprietary for now.
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             5             0             1             2             0
+Steady-state restart from test problem AdjFlowLossTest1.  Adjusted additive
+flow losses obtained from restart file.
+Plots of interest adjusted additive flow loss contollers CB -5, -10,
+-15, -20, -25, -30, -35, -40, -45, -50, -55, -60, -65, -70, -75, -80,
+and -85.
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  chfmult=1000.0,
+  cssMaxNumOpt=.TRUE.,
+  dtstrt=-1.0,
+  graphlevel="full",
+  idiag=1,
+  ikfac=1,
+  nfrc1=2,
+  nfrc3=2,
+  usesjc=3,
+  npower=27,
+  nhtstr=27,
+  nAdjLosses = -1,
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+            -1          -1.0
+*       stdyst        transi         ncomp          njun          ipak
+             1             0            95            72             1
+*         epso          epss
+        1.0E-5        1.0E-5
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             1             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+           859          3820           324             0             0
+*
+*************************
+* component-number data *
+*************************
+*
+*  Component input order (IORDER)
+*-- type ---- num ------------- name ----------------  +    jun1   jun2   jun3
+* BREAK    *      1 s * c001                           +     410
+* PIPE     *      5 s * c005                           +     410    420
+* VESSEL   *     10 s * c010                           +
+* PIPE     *     15 s * c005                           +     430    440
+* BREAK    *     16 s * c016                           +     440
+* PIPE     *    101 s * c101                           +     210     10
+* PIPE     *    102 s * c102                           +     220     30
+* PIPE     *    103 s * c103                           +     230     50
+* PIPE     *    104 s * c104                           +     240     70
+* PIPE     *    105 s * c105                           +     250     90
+* PIPE     *    106 s * c106                           +     260    110
+* PIPE     *    107 s * c107                           +     270    130
+* PIPE     *    108 s * c108                           +     280    150
+* PIPE     *    109 s * c109                           +     290    170
+* PIPE     *    110 s * c110                           +     300    190
+* VESSEL   *    120 s * c120                           +
+* PIPE     *    121 s * c121                           +      20    310
+* PIPE     *    122 s * c122                           +      40    320
+* PIPE     *    123 s * c123                           +      60    330
+* PIPE     *    124 s * c124                           +      80    340
+* PIPE     *    125 s * c125                           +     100    350
+* PIPE     *    126 s * c126                           +     120    360
+* PIPE     *    127 s * c127                           +     140    370
+* PIPE     *    128 s * c128                           +     160    380
+* PIPE     *    129 s * c129                           +     180    390
+* PIPE     *    130 s * c130                           +     200    400
+* PIPE     *    151 s * c151                           +     450    520
+* PIPE     *    152 s * c152                           +     460    530
+* PIPE     *    153 s * c153                           +     470    540
+* PIPE     *    154 s * c154                           +     480    550
+* PIPE     *    155 s * c155                           +     490    560
+* PIPE     *    156 s * c156                           +     500    570
+* PIPE     *    157 s * c157                           +     510    580
+* VESSEL   *    160 s * c160                           +
+* PIPE     *    161 s * c161                           +     590    660
+* PIPE     *    162 s * c162                           +     600    670
+* PIPE     *    163 s * c163                           +     610    680
+* PIPE     *    164 s * c164                           +     620    690
+* PIPE     *    165 s * c165                           +     630    700
+* PIPE     *    166 s * c166                           +     640    710
+* PIPE     *    167 s * c167                           +     650    720
+* HTSTR    *   1020 s * hs1020                         +
+* HTSTR    *   1030 s * hs1030                         +
+* HTSTR    *   1035 s * hs1035                         +
+* HTSTR    *   1040 s * hs1040                         +
+* HTSTR    *   1045 s * hs1045                         +
+* HTSTR    *   1050 s * hs1050                         +
+* HTSTR    *   1055 s * hs1055                         +
+* HTSTR    *   1060 s * hs1060                         +
+* HTSTR    *   1065 s * hs1065                         +
+* HTSTR    *   1070 s * hs1070                         +
+* HTSTR    *   1075 s * hs1075                         +
+* HTSTR    *   1080 s * hs1080                         +
+* HTSTR    *   1085 s * hs1085                         +
+* HTSTR    *   1090 s * hs1090                         +
+* HTSTR    *   1095 s * hs1095                         +
+* HTSTR    *   1140 s * hs1140                         +
+* HTSTR    *   1145 s * hs1145                         +
+* HTSTR    *   1150 s * hs1150                         +
+* HTSTR    *   1155 s * hs1155                         +
+* HTSTR    *   1160 s * hs1160                         +
+* HTSTR    *   1165 s * hs1165                         +
+* HTSTR    *   1170 s * hs1170                         +
+* HTSTR    *   1175 s * hs1175                         +
+* HTSTR    *   1180 s * hs1180                         +
+* HTSTR    *   1185 s * hs1185                         +
+* HTSTR    *   1190 s * hs1190                         +
+* HTSTR    *   1195 s * hs1195                         +
+* POWER    *   5020 s * pow_hs1020                     +
+* POWER    *   5030 s * pow_hs1030                     +
+* POWER    *   5035 s * pow_hs1035                     +
+* POWER    *   5040 s * pow_hs1040                     +
+* POWER    *   5045 s * pow_hs1045                     +
+* POWER    *   5050 s * pow_hs1050                     +
+* POWER    *   5055 s * pow_hs1055                     +
+* POWER    *   5060 s * pow_hs1060                     +
+* POWER    *   5065 s * pow_hs1065                     +
+* POWER    *   5070 s * pow_hs1070                     +
+* POWER    *   5075 s * pow_hs1075                     +
+* POWER    *   5080 s * pow_hs1080                     +
+* POWER    *   5085 s * pow_hs1085                     +
+* POWER    *   5090 s * pow_hs1090                     +
+* POWER    *   5095 s * pow_hs1095                     +
+* POWER    *   5140 s * pow_hs1140                     +
+* POWER    *   5145 s * pow_hs1145                     +
+* POWER    *   5150 s * pow_hs1150                     +
+* POWER    *   5155 s * pow_hs1155                     +
+* POWER    *   5160 s * pow_hs1160                     +
+* POWER    *   5165 s * pow_hs1165                     +
+* POWER    *   5170 s * pow_hs1170                     +
+* POWER    *   5175 s * pow_hs1175                     +
+* POWER    *   5180 s * pow_hs1180                     +
+* POWER    *   5185 s * pow_hs1185                     +
+* POWER    *   5190 s * pow_hs1190                     +
+* POWER    *   5195 e * pow_hs1195                     +
+*
+***********************
+* material properties *
+***********************
+*
+*   matb*          50          51 e
+*  ptbln*           2           2 e
+*  User Defined Material : 50
+*
+*n: Al_UO2
+*
+*  prptb         temp         rho          cp        cond        emis
+*  prptb*      273.15         3.0       500.0        80.0         1.0s
+*  prptb*      673.15         3.0       500.0        80.0         1.0e
+*
+*  User Defined Material : 51
+*
+*n: Cladd_Al
+*
+*  prptb         temp         rho          cp        cond        emis
+*  prptb*      273.15        2.68       896.0       175.0         1.0s
+*  prptb*      673.15        2.68       896.0       175.0         1.0e
+*
+*
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             0             0             0             0             0
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*
+*
+*********************************************
+* Starting Control System Section of Model  *
+*********************************************
+*
+****** Control Blocks ******
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -103            56           103             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -118            56           118             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -133            56           133             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -148            56           148             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -163            56           163             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -178            56           178             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -193            56           193             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -208            56           208             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -223            56           223             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -238            56           238             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -253            56           253             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -268            56           268             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -283            56           283             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -298            56           298             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -313            56           313             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -328            56           328             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -343            56           343             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -358            56           358             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -373            56           373             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -388            56           388             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -403            56           403             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -418            56           418             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -433            56           433             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -448            56           448             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -463            56           463             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -478            56           478             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -493            56           493             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -508            56           508             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -523            56           523             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -538            56           538             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -553            56           553             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -568            56           568             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -583            56           583             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -598            56           598             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -613            56           613             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -628            56           628             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -643            56           643             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -658            56           658             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -673            56           673             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -688            56           688             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -703            56           703             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -718            56           718             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -733            56           733             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -748            56           748             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -763            56           763             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -778            56           778             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -793            56           793             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -808            56           808             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -823            56           823             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -838            56           838             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -853            56           853             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -868            56           868             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -883            56           883             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -898            56           898             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -913            56           913             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -928            56           928             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -943            56           943             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -958            56           958             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -973            56           973             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -988            56           988             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1003            56          1003             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1018            56          1018             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1033            56          1033             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1048            56          1048             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1063            56          1063             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1078            56          1078             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1093            56          1093             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1108            56          1108             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1123            56          1123             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1138            56          1138             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1153            56          1153             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1168            56          1168             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1183            56          1183             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1198            56          1198             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1213            56          1213             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1228            56          1228             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1243            56          1243             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1258            56          1258             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1273            56          1273             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1288            56          1288             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1303            56          1303             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1318            56          1318             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1333            56          1333             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1348            56          1348             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1363            56          1363             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1378            56          1378             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1393            56          1393             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1408            56          1408             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1423            56          1423             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1438            56          1438             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1453            56          1453             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1468            56          1468             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1483            56          1483             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1498            56          1498             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1513            56          1513             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1528            56          1528             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1543            56          1543             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1558            56          1558             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1573            56          1573             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1588            56          1588             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1603            56          1603             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1618            56          1618             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1633            56          1633             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1648            56          1648             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1663            56          1663             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1678            56          1678             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1693            56          1693             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1708            56          1708             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1723            56          1723             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1738            56          1738             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1753            56          1753             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1768            56          1768             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1783            56          1783             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1798            56          1798             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1813            56          1813             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1828            56          1828             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1843            56          1843             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1858            56          1858             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1873            56          1873             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1888            56          1888             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1903            56          1903             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1918            56          1918             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1933            56          1933             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1948            56          1948             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1963            56          1963             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1978            56          1978             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -1993            56          1993             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2008            56          2008             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2023            56          2023             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2038            56          2038             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2053            56          2053             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2068            56          2068             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2083            56          2083             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2098            56          2098             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2113            56          2113             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2128            56          2128             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2143            56          2143             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2158            56          2158             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2173            56          2173             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2188            56          2188             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2203            56          2203             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2218            56          2218             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2233            56          2233             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2248            56          2248             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2263            56          2263             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2278            56          2278             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2293            56          2293             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2308            56          2308             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2323            56          2323             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2338            56          2338             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2353            56          2353             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2368            56          2368             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2383            56          2383             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2398            56          2398             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2413            56          2413             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2428            56          2428             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2443            56          2443             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2458            56          2458             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2473            56          2473             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2488            56          2488             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2503            56          2503             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2518            56          2518             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2533            56          2533             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2548            56          2548             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2563            56          2563             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2578            56          2578             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2593            56          2593             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2608            56          2608             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2623            56          2623             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2638            56          2638             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2653            56          2653             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2668            56          2668             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2683            56          2683             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2698            56          2698             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2713            56          2713             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2728            56          2728             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2743            56          2743             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2758            56          2758             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2773            56          2773             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2788            56          2788             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2803            56          2803             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2818            56          2818             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2833            56          2833             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2848            56          2848             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2863            56          2863             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2878            56          2878             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2893            56          2893             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2908            56          2908             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2923            56          2923             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2938            56          2938             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2953            56          2953             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2968            56          2968             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2983            56          2983             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -2998            56          2998             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3013            56          3013             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3028            56          3028             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3043            56          3043             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3058            56          3058             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3073            56          3073             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3088            56          3088             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3103            56          3103             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3118            56          3118             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3133            56          3133             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3148            56          3148             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3178            56          3178             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3193            56          3193             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3208            56          3208             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3223            56          3223             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3238            56          3238             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3253            56          3253             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3268            56          3268             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3283            56          3283             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3298            56          3298             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3313            56          3313             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3328            56          3328             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3343            56          3343             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3358            56          3358             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3373            56          3373             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3388            56          3388             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3403            56          3403             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3418            56          3418             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3433            56          3433             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3448            56          3448             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3463            56          3463             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3478            56          3478             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3493            56          3493             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3508            56          3508             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3523            56          3523             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3553            56          3553             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3568            56          3568             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3583            56          3583             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3598            56          3598             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3613            56          3613             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3628            56          3628             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3643            56          3643             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3658            56          3658             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3673            56          3673             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3688            56          3688             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3703            56          3703             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3718            56          3718             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3733            56          3733             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3748            56          3748             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3763            56          3763             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3778            56          3778             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3793            56          3793             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3808            56          3808             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3823            56          3823             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3838            56          3838             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3853            56          3853             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3868            56          3868             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3883            56          3883             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3898            56          3898             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3928            56          3928             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3943            56          3943             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3958            56          3958             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3973            56          3973             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -3988            56          3988             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4003            56          4003             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4018            56          4018             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4033            56          4033             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4048            56          4048             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4063            56          4063             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4078            56          4078             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4093            56          4093             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4108            56          4108             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4123            56          4123             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4138            56          4138             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4153            56          4153             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4168            56          4168             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4183            56          4183             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4198            56          4198             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4213            56          4213             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4228            56          4228             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4243            56          4243             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4258            56          4258             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4273            56          4273             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4303            56          4303             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4318            56          4318             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4333            56          4333             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4348            56          4348             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4363            56          4363             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4378            56          4378             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4393            56          4393             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4408            56          4408             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4423            56          4423             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4438            56          4438             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4453            56          4453             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4468            56          4468             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4483            56          4483             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4498            56          4498             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4513            56          4513             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4528            56          4528             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4543            56          4543             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4558            56          4558             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4573            56          4573             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4588            56          4588             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4603            56          4603             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4618            56          4618             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4633            56          4633             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4648            56          4648             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4678            56          4678             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4693            56          4693             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4708            56          4708             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4723            56          4723             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4738            56          4738             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4753            56          4753             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4768            56          4768             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4783            56          4783             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4798            56          4798             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4813            56          4813             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4828            56          4828             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4843            56          4843             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4858            56          4858             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4873            56          4873             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4888            56          4888             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4903            56          4903             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4918            56          4918             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4933            56          4933             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4948            56          4948             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4963            56          4963             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4978            56          4978             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -4993            56          4993             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -5008            56          5008             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+         -5023            56          5023             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+        1.0E-3       -1.0E20        1.0E20           0.0          1.01
+*
+            0             0             0             0             0
+*********************************************
+* Finished Control System Section of Model  *
+*********************************************
+*
+*
+*
+*
+********************************************
+* Starting Heat Structure Section of Model *
+********************************************
+********************************************
+* Finished Heat Structure Section of Model *
+********************************************
+*
+*
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+        1.0E-6           0.1         100.0          10.0
+*        edint         gfint        dmpint        sedint
+          50.0          0.25         100.0          10.0
+*
+*      endflag
+          -1.0

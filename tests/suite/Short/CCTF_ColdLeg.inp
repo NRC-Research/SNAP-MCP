@@ -1,0 +1,174 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    Short
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             2             0             1             0             0
+Cylindrical Core Test Facility (CCTF):
+Cold Leg Condensation Test
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  graphlevel="full",
+  ikfac=1,
+  usesjc=3,
+  fluids='H2O',
+  igas=1
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             4             3             1
+*         epso          epss
+        1.0E-4        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+            1             0             0             0             0
+*
+*************************
+* component-number data *
+*************************
+*
+* iorder*          11       12       21      31 e
+*
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*n: time
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             1             0             0             0             0
+*
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*******   type           num        userid                component name
+fill                      11             1                     steam fill
+*         jun1          ifty          ioff
+            1             5             0
+*         iftr          ifsv          nftb        nfsv      nfrf
+            0             1             4           0         0
+*       twtold          rfmx        concin          felv
+           0.0        1.0E20           0.0           0.0
+*         dxin         volin         alpin          vlin          tlin
+           1.0       0.01892          1.0           0.0          399.9
+*          pin          pain        flowin          vvin          tvin
+          2.45E5          0.0         0.688         26.6         405.0
+*        vmscl         vvscl
+            1.            1.
+*
+*     Steam mass flow rate vs. time table:
+*
+           0.0        0.688s              * vmtb
+          100.0       0.688s              * vmtb
+          101.0       1.0s                * vmtb
+          200.0       1.0e                * vmtb
+*
+*
+*******   type           num        userid                component name
+fill                      12             1                   water fill
+*         jun1          ifty          ioff
+            2             5             0
+*         iftr          ifsv          nftb        nfsv      nfrf
+            0             1             5           0         0
+*       twtold          rfmx        concin          felv
+           0.0        1.0E20           0.0           0.0
+*         dxin         volin         alpin          vlin          tlin
+           1.0      0.001735           0.0          0.0          309.2
+*          pin          pain        flowin          vvin          tvin
+          2.45E5         0.0         0.000          0.0         399.9
+*        vmscl         vvscl
+            1.            1.
+*
+*     Water mass flow rate vs. time table:
+*
+           0.0        0.0s                * vmtb
+          1.0         3.85s               * vmtb
+         100.0        3.85s               * vmtb
+         101.0        28.3s               * vmtb
+         200.0        28.3e               * vmtb
+*
+*
+*******   type           num        userid                component name
+pipe                      21           1                    Cold Leg
+*       ncells         nodes         jun1         jun2         epsw
+           5             0            1            3         5.0E-6
+*       nsides
+            1
+*         nclk         junlk        ncmpto        nclkto        nlevto
+            2             2             0             0             0
+*         theta        ientrn
+          45.0            0
+*         ichf         iconc          iacc          ipow        npipes
+             1             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv          pwin         pwoff         rpwmx         pwscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *   r02 0.8   r03 0.8573 e
+* vol   *   r02 0.01514   r03 0.01622 e
+* fa    *   f 0.01892 e
+* kfac  *   f 0.0 e
+* grav  *   f 0.0 e
+* hd    *   f 0.1552 e
+* nff   *   f 1 e
+* alp   *   f 1.0 e
+* vl    *   f 0.0   e
+* vv    *   f 26.6  e
+* tl    *   f 399.9 e
+* tv    *   f 405.0 e
+* p     *   f 2.45E5  e
+* pa    *   f 0.0    e
+*
+*
+*******   type           num        userid                component name
+break                     31             1                    Press BC
+*         jun1          ibty          isat          ioff      adjpress
+            3             0             0             1             0
+*         dxin         volin         alpin           tin           pin
+           1.0       0.01892          1.0           405.0       2.45E5
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0        1.0E20           0.0           0.0
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp        powerc
+        1.0E-5          0.01         200.0          1.0           0.0
+*        edint         gfint        dmpint        sedint
+          20.0          0.01         1000.0       1000.0
+*
+*      endflag
+          -1.0

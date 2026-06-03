@@ -1,0 +1,209 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    OffTake
+#    Short
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat
+             1             0             1             0
+Cold leg small break TEE component.
+*
+*   #########  ##################  #########
+*   # break #  # tee   #   29   #  # break #
+*   # 25    #25#   1   #    2   #29# 30    #
+*   #########  ##################  #########
+*              #       #
+*              #   3   #
+*              #########
+*                 229
+*              #########
+*              # break #
+*              # 229   #
+*              #########
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+   fdfhl=1.0, iadded=100, iblaus=0, icflow=2, ikfac=1,
+    imfr=3, nfrc1=2, nlt=11, noair=0, idiag = 1,
+    nrslv=1, usesjc=3, iofftk=1,
+ &end
+*
+*        dstep         timet
+            -1    0.0000e+00
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             4             3             1
+*         epso          epss
+    1.0000e-04    1.0000e-04
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            25            10             1            0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             1             0             0             1             1
+*
+*************************
+* component-number data *
+*************************
+*
+*iorder*                29 s   * Cold leg small break tee
+*iorder*                25 s   * Cold leg left BC
+*iorder*                30 s   * Cold leg right BC
+*iorder*               229 e   * Atmospheric BC
+*
+**************************
+* control-parameter data *
+**************************
+*
+* signal variables
+*
+             1             0             0             0             0
+*
+* control blocks
+*
+*trip-dimension variables data
+*ntse    ntct     ntsf     ntdp     ntsd
+ 0       0        0        0        0
+*
+*trip-defining variables data
+*idtp   isrt    iset    itst    idsg
+*       setp(i),i=1,nsp
+*       dtsp(i),i=1,nsp
+*       ifsp(i),i=1,nsp
+*
+*      always true trip (off-on)
+ 1     2      0      1      1
+       0.0    0.0
+       0.0    0.0
+       0      0
+*
+******************
+* component data *
+******************
+*
+**********************************************************************
+*******   type           num            id        ctitle
+break                     25            25 $25$ cold leg left BC
+*         jun1          ibty          isat          ioff
+            25             0             3             0
+*         dxin         volin         alpin           tin           pin
+        1.1033       0.42278           0.5         547.8      59.1e+05
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0       1.0e+10           0.0           0.0
+*
+*
+**********************************************************************
+*******   type           num            id        ctitle
+break                     30            30 $30$ cold leg right BC
+*         jun1          ibty          isat          ioff
+            29             0             3             0
+*         dxin         volin         alpin           tin           pin
+        1.1033       0.42278           0.5         547.8      59.1e+05
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0       1.0e+10           0.0           0.0
+*
+**********************************************************************
+*******   type           num            id        ctitle
+tee                      29            29 $29$ cold leg section 2c
+*        jcell         nodes          ichf          cost          epsw
+             1             0             1    0.0000e+00    0.0000e+00
+*       iconc1        ncell1          jun1          jun2         ipow1
+             1             2            25            29             0
+*       radin1           th1        houtl1        houtv1        toutl1
+    3.4925e-01    6.6680e-02    0.0000e+00    0.0000e+00    3.0000e+02
+*       toutv1         pwin1        pwoff1        rpwmx1        pwscl1
+    3.0000e+02    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00
+*       iconc2        ncell2          jun3         ipow2
+             1             1           229             0
+*       radin2           th2        houtl2        houtv2        toutl2
+    3.4925e-01    6.6680e-02    0.0000e+00    0.0000e+00    3.0000e+02
+*       toutv2         pwin2        pwoff2        rpwmx2        pwscl2
+    3.0000e+02    0.0000e+00    0.0000e+00    0.0000e+00    0.0000e+00
+*    ientrn
+          1
+*
+*    main-cell arrays
+* dx    * f   1.1033e+00e
+* vol   *     4.2278e-01    4.9953e-01e
+* fa    * r02 3.8320e-01    5.7717e-01e
+* fric  *     0.0000e+00    1.0000e-01    3.0000e-01e
+* rv fri*     0.0000e+00    1.0000e-01    3.0000e-01e
+* grav  * f   0.0000e+00e
+* hd    * r02 6.9850e-01    8.5725e-01e
+* icflg * f            0e
+* nff   * f            1e
+* alp   * f          0.5e
+* vl    * f          0.0e
+* vv    * f          0.0e
+* tl    * f        547.8e
+* tv    * f        547.8e
+* p     * f     59.1e+05e
+* pa    * f   0.0000e+00e
+* conc  * f   0.0000e+00e
+*
+*    side-cell arrays (eccs junction)
+*
+* dx                    *f      0.06668e
+*
+*  2.5-inch break vol = *f  4.03480e-04e
+*
+*  2.5-inch break  fa = *   9.50077e-03  3.16692e-03e
+*
+* fric                  *           0.0          0.0e
+* rv fri                *           0.0          0.0e
+* grav                  * f         1.0e
+*
+*  2.5-inch break  hd = *       0.10999     0.063500e
+*
+* icflg                 *             0            1e
+* nff                   *            -1           -1e
+* alp                   * f         0.5e
+* vl                    * f         0.0e
+* vv                    * f         0.0e
+* tl                    * f  5.4780e+02e
+* tv                    * f  5.4780e+02e
+* p                     * f    59.1e+05e
+* pa                    * f         0.0e
+* conc                  * f         0.0e
+*
+**********************************************************************
+*******   type           num            id        ctitle
+break                     229            229 $229$ small break pressure boundary
+*         jun1          ibty          isat          ioff
+           229             0             0             1
+*         dxin         volin         alpin           tin           pin
+*  2.5-inch break
+       0.06668   4.03480e-04           1.0         373.2    1.0135e+05
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0           0.0           0.0           0.0
+*
+***********************************************************************
+end
+*
+******************
+* time-step data *
+******************
+*
+*    dtmin     dtmax     tend    rtwfp
+   1.0e-07     0.05       500.0    10.0
+*    edint     gfint     dmpint  sedint
+   500.0       3.0      100.0     900.0
+*
+*      endflag
+   -1.0000e+00

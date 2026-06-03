@@ -1,0 +1,330 @@
+free format
+#<Regression>
+#  <Author>Auto-Generated</Author>
+#  <Format>TRACE</Format>
+#  <Restart />
+#  <ParallelCases />
+#  <SupportFiles />
+#  <Suites>
+#    Valve
+#  </Suites>
+#  <FailureMode />
+#  <Purpose />
+#  <PermutationOf />
+#  <SuccessCriteria />
+#</Regression>
+*
+*
+*************
+* main data *
+*************
+*
+*       numtcr          ieos         inopt          nmat          id2o
+             1             0             1             0             0
+SJC type -1 Valve with Cv table
+*
+*  The purpose of this test problem is to exercise the servo valve option (ivty = -1) with only forward
+*  Cv tables.  The control system is used to directly adjust the flow area fraction of
+*  the valve.  The valve is configured as a single face without volume (SJC component) in order to test
+*  that the Cv tables work properly in that context.
+*
+*  This deck may generate spurious --thermh temp limit exceeded-- messages right at the beginning of the
+*  transient due to an initial pressure wave that is unavoidable given the test problem configuration
+*  (valve initially closed, then opens, with an imposed pressure drop via 2 break components).
+*
+*
+*****************
+* namelist data *
+*****************
+*
+ &inopts
+  useSJC=3
+  nfrc1=1
+ &end
+*
+***************
+* Model Flags *
+***************
+*
+*        dstep         timet
+             0           0.0
+*       stdyst        transi         ncomp          njun          ipak
+             0             1             7             6             1
+*         epso          epss
+        1.0E-4        1.0E-4
+*       oitmax        sitmax        isolut        ncontr         nccfl
+            10            10             0             0             0
+*         ntsv          ntcb          ntcf          ntrp          ntcp
+             1             2             0             0             0
+*
+*************************
+* component-number data *
+*************************
+*
+* iorder*         436         456         510         515         520s
+* iorder*         656         666e
+*
+*************
+* ccfl data *
+*************
+*
+**************************************************
+* Starting Signal Variable Section of Model      *
+**************************************************
+*
+*         idsv          isvn          ilcn          icn1          icn2
+             1             0             0             0             0
+*
+**************************************************
+* Finished Signal Variable Section of Model      *
+**************************************************
+*
+*
+*
+*
+*********************************************
+* Starting Control System Section of Model  *
+*********************************************
+*
+****** Control Blocks ******
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -329            56             1             0             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+           1.0       -1.0E20        1.0E20           0.0           0.0
+*
+*
+*
+*         idcb          icbn          icb1          icb2          icb3
+          -331           101          -329            11             0
+*       cbgain        cbxmin         cbmax        cbcon1        cbcon2
+           1.0       -1.0E20        1.0E20           0.0           0.0
+* cbftab *         0.0         0.0s
+* cbftab *         2.0         0.1s
+* cbftab *         3.0         0.1s
+* cbftab *         4.0         0.2s
+* cbftab *         6.0         0.2s
+* cbftab *         8.0         0.4s
+* cbftab *        12.0         0.4s
+* cbftab *        15.0         0.7s
+* cbftab *        20.0         1.0s
+* cbftab *        30.0         1.0s
+* cbftab *        40.0         0.0e
+*
+*********************************************
+* Finished Control System Section of Model  *
+*********************************************
+*
+*
+*
+*
+*******************************************
+* Starting General Table Section of Model *
+*******************************************
+*******************************************
+* Finished General Table Section of Model *
+*******************************************
+*
+*
+*
+*
+*******   type           num        userid                component name
+break                    436             1                         inlet
+*         jun1          ibty          isat          ioff      adjpress
+         45601             4             4             0             0
+*         ibtr          ibsv          nbtb          nbsv          nbrf
+             0             1             1             0             0
+*         dxin         volin         alpin           tin           pin
+           0.3          0.09           0.0         300.0         1.2E6
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0        1.0E20           0.0           0.0
+*         pscl         tlscl         tvscl         pascl        conscl
+           1.0           1.0           1.0           1.0           1.0
+* ptb  *          0.0       1.2E6e
+* tltb  *            0.0         300.0e
+* tvtb  *            0.0         300.0e
+* alptb  *            0.0           0.0e
+* patb  *            0.0           0.0e
+*
+*
+*******   type           num        userid                component name
+* single junction
+pipe                     456             1                         inlet
+*       ncells         nodes         jun1         jun2         epsw
+             0             0        45601        45602          0.0
+*         ichf         iconc          iacc          ipow        npipes
+             0             0             0             0             0
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         powin        powoff        rpowmx        powscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *  f 0.0000e+00e
+* vol   *  f 0.0000e+00e
+* fa    *  f          0.3e
+* fric  *  f          0.0e
+* grav  *  f          0.0e
+* hd    *  f    0.6180387e
+* nff   *  f            1e
+* alp   *  f 0.0000e+00e
+* vl    *  f          0.0e
+* vv    *  f          0.0e
+* tl    *  f 0.0000e+00e
+* tv    *  f 0.0000e+00e
+* p     *  f 0.0000e+00e
+* pa    *  f 0.0000e+00e
+*
+*
+*******   type           num        userid                component name
+pipe                     510             1                         inlet
+*       ncells         nodes         jun1         jun2         epsw
+             1             0        45602        51501          0.0
+*       nsides
+             0
+*         ichf         iconc          iacc          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         powin        powoff        rpowmx        powscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *          0.3e
+* vol   *         0.09e
+* fa    *          0.3         0.0e
+* fric  *          0.0    10.30065e
+* grav  *          0.0         0.0e
+* hd    *    0.6180387   0.6180387e
+* nff   *            1           1e
+* alp   *          0.0e
+* vl    *          0.0         0.0e
+* vv    *          0.0         0.0e
+* tl    *        300.0e
+* tv    *      453.028e
+* p     *        1.0E6e
+* pa    *          0.0e
+*
+*
+*******   type           num        userid                component name
+valve                    515             1                       chk vlv
+*       ncells         nodes         jun1         jun2         epsw
+             0             0        51501        51502          0.0
+*         ichf         iconc          ivty          ivps         nvtb2
+             0             0            -1             1             6
+*         ivtr          ivsv         nvtb1          nvsv          nvrf
+             0          -331             0             0             0
+*       ivtrov        ivtyov
+             0             0
+*         rvmx          rvov        fminov        fmaxov
+        1.0E20           0.0           0.0           1.0
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         avlve         hvlve        favlve          xpos
+           0.0           0.3     0.6180387           0.0           0.0
+*        NormFaFactor   CsubVFactor   nvtx
+           1.0           1.0            0
+* dx    *  f 0.0000e+00e
+* vol   *  f 0.0000e+00e
+* fa    *  f          0.0e
+* fric  *  f     10.30065e
+* grav  *  f          0.0e
+* hd    *  f    0.6180387e
+* nff   *  f            1e
+* alp   *  f 0.0000e+00e
+* vl    *  f          0.0e
+* vv    *  f          0.0e
+* tl    *  f 0.0000e+00e
+* tv    *  f 0.0000e+00e
+* p     *  f 0.0000e+00e
+* pa    *  f 0.0000e+00e
+*
+* vtb2  *         0.0            0.0s
+* vtb2  *         0.2    2.279417e-4s
+* vtb2  *         0.4    4.558833e-4s
+* vtb2  *         0.6    9.117666e-4s
+* vtb2  *         0.8    1.823533e-3s
+* vtb2  *         1.0    1.342251e-2e
+*
+*******   type           num        userid                component name
+pipe                     520             1                          exit
+*       ncells         nodes         jun1         jun2         epsw
+             1             0        51502        65601          0.0
+*       nsides
+             0
+*         ichf         iconc          iacc          ipow        npipes
+             0             0             0             0             1
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         powin        powoff        rpowmx        powscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *          0.3e
+* vol   *         0.09e
+* fa    *          0.0         0.3e
+* fric  *     10.30065         0.0e
+* grav  *          0.0         0.0e
+* hd    *    0.6180387   0.6180387e
+* nff   *            1          -1e
+* alp   *          0.0e
+* vl    *          0.0         0.0e
+* vv    *          0.0         0.0e
+* tl    *        300.0e
+* tv    *      453.028e
+* p     *        1.0E6e
+* pa    *          0.0e
+*
+*
+*******   type           num        userid                component name
+* single junction
+pipe                     656             1                          exit
+*       ncells         nodes         jun1         jun2         epsw
+             0             0        65601        65602          0.0
+*         ichf         iconc          iacc          ipow        npipes
+             0             0             0             0             0
+*        radin            th         houtl         houtv         toutl
+           0.0           0.0           0.0           0.0           0.0
+*        toutv         powin        powoff        rpowmx        powscl
+           0.0           0.0           0.0           0.0           0.0
+* dx    *  f 0.0000e+00e
+* vol   *  f 0.0000e+00e
+* fa    *  f          0.3e
+* fric  *  f          0.0e
+* grav  *  f          0.0e
+* hd    *  f    0.6180387e
+* nff   *  f           -1e
+* alp   *  f 0.0000e+00e
+* vl    *  f          0.0e
+* vv    *  f          0.0e
+* tl    *  f 0.0000e+00e
+* tv    *  f 0.0000e+00e
+* p     *  f 0.0000e+00e
+* pa    *  f 0.0000e+00e
+*
+*
+*******   type           num        userid                component name
+break                    666             1                          exit
+*         jun1          ibty          isat          ioff      adjpress
+         65602             4             4             0             0
+*         ibtr          ibsv          nbtb          nbsv          nbrf
+             0             1             1             0             0
+*         dxin         volin         alpin           tin           pin
+           0.3          0.09           0.0         300.0         1.0E6
+*         pain        concin          rbmx          poff          belv
+           0.0           0.0        1.0E20           0.0           0.0
+*         pscl         tlscl         tvscl         pascl        conscl
+           1.0           1.0           1.0           1.0           1.0
+* ptb  *          0.0       1.0E6e
+* tltb  *            0.0         300.0e
+* tvtb  *            0.0         300.0e
+* alptb  *            0.0           0.0e
+* patb  *            0.0           0.0e
+*
+end
+*
+*****************
+* Timestep Data *
+*****************
+*        dtmin         dtmax          tend         rtwfp
+        1.0E-7          0.01          49.9          10.0
+*        edint         gfint        dmpint        sedint
+           1.0          0.1         5.0           0.5
+*
+*      endflag
+          -1.0
