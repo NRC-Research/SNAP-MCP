@@ -193,3 +193,78 @@ def register_model_tools(mcp) -> None:
             
         _session.remove(model_id)
         return {"status": "ok", "model_id": model_id}
+
+    @mcp.tool()
+    def set_model_options(
+        model_id: str,
+        name: str,
+        value: object,
+    ) -> dict:
+        """Set a property on the model options (such as timestep_table).
+
+        Parameters
+        ----------
+        model_id : str
+        name : str
+            Property name (e.g. 'timestep_table').
+        value : object
+            Property value (scalar, list, or nested list of rows for table data).
+
+        Returns
+        -------
+        dict with keys: status (str)
+        """
+        try:
+            model = _session.get(model_id)
+        except KeyError as exc:
+            return {"status": "error", "error": str(exc)}
+
+        opts = model.model_options()
+
+        try:
+            target_obj = opts
+            prop_name = name
+            if "." in name:
+                parts = name.split(".")
+                for part in parts[:-1]:
+                    target_obj = getattr(target_obj, part)
+                prop_name = parts[-1]
+
+            table_prop = prop_name + "_table"
+            if hasattr(target_obj, table_prop):
+                prop_name = table_prop
+
+            try:
+                current_val = getattr(target_obj, prop_name)
+            except Exception:
+                current_val = None
+
+            from snap.codes.properties import PropertyTable
+            if isinstance(current_val, PropertyTable):
+                if not isinstance(value, (list, tuple)):
+                    return {"status": "error", "error": f"Property '{name}' is a table and expects a list of rows."}
+                rows = []
+                for r in value:
+                    if isinstance(r, (list, tuple)):
+                        rows.append(list(r))
+                    else:
+                        rows.append([r])
+                try:
+                    new_len = len(rows)
+                    curr_len = len(current_val)
+                    if new_len < curr_len:
+                        try:
+                            for idx in range(curr_len - 1, new_len - 1, -1):
+                                current_val.remove_row(idx)
+                        except Exception:
+                            pass
+                    current_val.read(rows)
+                except Exception as exc:
+                    return {"status": "error", "error": f"Failed to set table data: {exc}"}
+            else:
+                setattr(target_obj, prop_name, value)
+
+            return {"status": "ok"}
+        except Exception as exc:
+            return {"status": "error", "error": str(exc)}
+

@@ -51,6 +51,7 @@ def run_test():
     get_schema_fn = mcp._tool_manager._tools["get_component_schema"].fn
     review_model_fn = mcp._tool_manager._tools["review_model"].fn
     validate_model_fn = mcp._tool_manager._tools["validate_model"].fn
+    set_model_opts_fn = mcp._tool_manager._tools["set_model_options"].fn
     
     # TEST 1: Schema Tool
     print("\nTEST 1: get_component_schema...")
@@ -238,7 +239,7 @@ def run_test():
     tdv_prop = comp_data["properties"]["tdv_data"]
     assert isinstance(tdv_prop, list)
     assert len(tdv_prop) == 3
-    assert tdv_prop[0][0] is None or str(tdv_prop[0][0]) == "None"
+    assert float(tdv_prop[0][0]) == 0.0
     assert float(tdv_prop[0][1]) == 0.0
     assert float(tdv_prop[1][2]) == 1.5e7
     print("Table data setting (tdv_data) and serialization verified successfully!")
@@ -300,6 +301,20 @@ def run_test():
     finally:
         if os.path.exists(tmp_inp):
             os.unlink(tmp_inp)
+
+    # TEST 13: set_model_options
+    print("\nTEST 13: set_model_options...")
+    res = set_model_opts_fn(
+        model_id=model_id,
+        name="timestep_table",
+        value=[[100.0, 1e-6, 0.01, 3, 100, 1000, 1000]]
+    )
+    assert res["status"] == "ok"
+    
+    # Verify via python options object end time
+    opt_obj = _session.get(model_id).model_options()
+    assert float(opt_obj.timestep_table[0][0]) == 100.0
+    print("set_model_options verified successfully!")
 
     print("\nALL snap-relap NEW FEATURES TESTS PASSED SUCCESSFULLY!")
 
