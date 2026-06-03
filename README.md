@@ -175,11 +175,25 @@ new component types.
 
 ---
 
+## snap-relap
+
+A companion MCP server for **RELAP5** model construction, validation, and deck export lives in `snap-relap/`. It provides natural-language tool mappings for constructing RELAP5 systems, dynamically enriching validation error messages with actionable fixes to allow autonomous agentic self-correction.
+
+See [snap-relap/README.md](file:///Users/cgg-mac/SNAP-MCP/snap-relap/README.md) for details, client setup instructions, and the tool list.
+
+---
+
 ## snap-melcor (in development)
 
-A companion MCP server for **MELCOR2X** input deck inspection and modification
-lives in `snap-melcor/`. Status: Python bindings auto-generated from plugin Java
-source (203 enum classes, 278 component wrappers); all tool stubs implemented.
-Needs live testing against a SNAP MELCOR2X installation before deployment.
+A companion MCP server for **MELCOR2X** input deck inspection and modification lives in `snap-melcor/`. Status: Python bindings auto-generated from plugin Java source (203 enum classes, 278 component wrappers); all tool stubs implemented.
 
-See `snap-melcor/README.md` for details, tool list, and what needs live testing.
+See `snap-melcor/README.md` for details, tool list, and status.
+
+---
+
+## Licensing Requirements
+
+All MCP servers in this repository (`snap-trace`, `snap-relap`, and `snap-melcor`) interface with SNAP (Symbolic Nuclear Analysis Program) Python APIs and require a valid, licensed installation of SNAP and its corresponding plugins to function.
+
+If you or your organization do not have a license for SNAP, contact **Information Systems Laboratories (ISL), Inc.** to obtain one:
+* **SNAP License Info**: [ISL Inc. SNAP Info](https://www.islinc.com/products/snapinfo)
