@@ -49,9 +49,9 @@ def register_connection_tools(mcp) -> None:
         """
         model = _session.get(model_id)
         
-        # Format the 7-digit connection strings: {cc}{cell:02d}000{face}
-        inlet_str = f"{from_cc}{from_cell:02d}000{from_face}"
-        outlet_str = f"{to_cc}{to_cell:02d}000{to_face}"
+        # Format the connection strings: {cc:03d}{cell:02d}000{face} (9-digit RELAP5 format)
+        inlet_str = f"{from_cc:03d}{from_cell:02d}000{from_face}"
+        outlet_str = f"{to_cc:03d}{to_cell:02d}000{to_face}"
         
         # Find the junction component
         ctype, comp = find_component(model, junction_cc)
