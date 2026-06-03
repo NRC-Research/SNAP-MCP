@@ -204,9 +204,9 @@ def _normalize_table_rows(prop_name: str, rows: list) -> list:
         r_list = list(r) if isinstance(r, (list, tuple)) else [r]
         if "tdv_data" in prop_name:
             if len(r_list) == 3:
-                r_list = [None, r_list[0], r_list[1], r_list[2], 0.0]
+                r_list = [0.0, r_list[0], r_list[1], r_list[2], 0.0]
             elif len(r_list) == 4:
-                r_list = [None, r_list[0], r_list[1], r_list[2], r_list[3]]
+                r_list = [0.0, r_list[0], r_list[1], r_list[2], r_list[3]]
         elif "tdj_data" in prop_name:
             if len(r_list) == 2:
                 r_list = [None, r_list[0], r_list[1]]
