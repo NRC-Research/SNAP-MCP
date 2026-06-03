@@ -95,11 +95,49 @@ def _python_model_check(model) -> tuple[list[str], list[str]]:
     return errors, warnings
 
 
+def _run_validation(model) -> tuple[list[str], list[str]]:
+    """Run SNAP's built-in validation checks along with Python-level checks."""
+    import tempfile
+    import os
+    errors: list[str] = []
+    warnings: list[str] = []
+    java_model = model.java_model
+
+    try:
+        messages = java_model.validate()
+        for msg in (messages or []):
+            text = str(msg)
+            if 'ERROR' in text.upper():
+                errors.append(text)
+            else:
+                warnings.append(text)
+    except AttributeError:
+        # Fall back to export validation check if validate method is missing
+        try:
+            with tempfile.NamedTemporaryFile(suffix='.inp', delete=False) as f:
+                tmp_path = f.name
+            result = model.export(tmp_path)
+            os.unlink(tmp_path)
+            if result is None:
+                errors.append("Export returned None — model likely has errors")
+        except Exception as exc:
+            errors.append(f"Validation via export failed: {exc}")
+    except Exception as exc:
+        errors.append(f"Validation failed: {exc}")
+
+    # Supplement with Python-level checks
+    py_errors, py_warnings = _python_model_check(model)
+    errors.extend(py_errors)
+    warnings.extend(py_warnings)
+
+    return errors, warnings
+
+
 def register_export_tools(mcp) -> None:
 
     @mcp.tool()
     def validate_model(model_id: str) -> dict:
-        """Run SNAP's built-in model validation and return errors and warnings.
+        """Run SNAP's built-in model check and return any validation errors or warnings.
 
         Parameters
         ----------
@@ -110,37 +148,7 @@ def register_export_tools(mcp) -> None:
         dict with keys: valid (bool), errors (list[str]), warnings (list[str])
         """
         model = _session.get(model_id)
-        java_model = model.java_model
-        errors: list[str] = []
-        warnings: list[str] = []
-
-        try:
-            messages = java_model.validate()
-            for msg in (messages or []):
-                text = str(msg)
-                if 'ERROR' in text.upper():
-                    errors.append(text)
-                else:
-                    warnings.append(text)
-        except AttributeError:
-            # Fall back to export validation check if validate method is missing
-            try:
-                with tempfile.NamedTemporaryFile(suffix='.inp', delete=False) as f:
-                    tmp_path = f.name
-                result = model.export(tmp_path)
-                os.unlink(tmp_path)
-                if result is None:
-                    errors.append("Export returned None — model likely has errors")
-            except Exception as exc:
-                errors.append(f"Validation via export failed: {exc}")
-        except Exception as exc:
-            errors.append(f"Validation failed: {exc}")
-
-        # Supplement with Python-level checks
-        py_errors, py_warnings = _python_model_check(model)
-        errors.extend(py_errors)
-        warnings.extend(py_warnings)
-
+        errors, warnings = _run_validation(model)
         return {
             "valid": len(errors) == 0,
             "errors": errors,
@@ -150,6 +158,8 @@ def register_export_tools(mcp) -> None:
     @mcp.tool()
     def export_relap(model_id: str, path: str) -> dict:
         """Export the model to a RELAP5 ASCII input deck (.inp).
+
+        Note: This tool runs validate_model automatically and will fail if the model contains errors.
 
         Parameters
         ----------
@@ -162,6 +172,18 @@ def register_export_tools(mcp) -> None:
         dict with keys: status (str), exported_files (list[str])
         """
         model = _session.get(model_id)
+        
+        # Enforce validation
+        errors, warnings = _run_validation(model)
+        if errors:
+            return {
+                "status": "error",
+                "error": "Model validation failed. You must fix these errors before exporting.",
+                "errors": errors,
+                "warnings": warnings,
+                "exported_files": [],
+            }
+            
         result = model.export(path)
         if result is None:
             return {
@@ -190,6 +212,8 @@ def register_export_tools(mcp) -> None:
     def save_med(model_id: str, path: str) -> dict:
         """Save the current model state as a SNAP .med file.
 
+        Note: This tool runs validate_model automatically and will fail if the model contains errors.
+
         Parameters
         ----------
         model_id : str
@@ -201,6 +225,17 @@ def register_export_tools(mcp) -> None:
         dict with keys: status (str), path (str)
         """
         model = _session.get(model_id)
+        
+        # Enforce validation
+        errors, warnings = _run_validation(model)
+        if errors:
+            return {
+                "status": "error",
+                "error": "Model validation failed. You must fix these errors before saving.",
+                "errors": errors,
+                "warnings": warnings,
+            }
+            
         try:
             model.save(path)
         except AttributeError:
