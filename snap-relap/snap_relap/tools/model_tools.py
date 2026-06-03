@@ -2,8 +2,59 @@
 
 from __future__ import annotations
 import uuid
+import logging
 
 from snap_relap import session as _session
+from snap_relap.component_map import find_component
+
+log = logging.getLogger(__name__)
+
+
+def _patch_junction_connections(model, path: str):
+    """Parse RELAP5 input deck to extract junction connection cards and apply them to the model."""
+    connections = {}  # j_cc -> (inlet, outlet)
+    
+    try:
+        with open(path, "r", encoding="utf-8", errors="ignore") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("*"):
+                    continue
+                
+                if "*" in line:
+                    line = line.split("*")[0].strip()
+                    
+                tokens = line.split()
+                if len(tokens) < 3:
+                    continue
+                    
+                card_str = tokens[0]
+                if not card_str.isdigit():
+                    continue
+                    
+                card = int(card_str)
+                # CCC0101 card where CCC is component number
+                if card % 10000 == 101:
+                    j_cc = card // 10000
+                    inlet = tokens[1]
+                    outlet = tokens[2]
+                    
+                    if inlet.isdigit() and outlet.isdigit():
+                        connections[j_cc] = (inlet, outlet)
+    except Exception as exc:
+        log.warning(f"Could not read/parse RELAP input file for connections: {exc}")
+        return
+
+    # Wire them up in the model
+    for j_cc, (inlet, outlet) in connections.items():
+        try:
+            ctype, comp = find_component(model, j_cc)
+            if comp is not None and ctype in ("SINGLE_JUNCTION", "TIME_DEPENDENT_JUNCTION", "VALVE", "PUMP"):
+                comp.inlet = inlet
+                comp.outlet = outlet
+                log.info(f"Patched connection for {ctype} {j_cc}: {inlet} -> {outlet}")
+        except Exception as exc:
+            log.warning(f"Could not patch connection for junction {j_cc}: {exc}")
 
 
 def register_model_tools(mcp) -> None:
@@ -83,6 +134,13 @@ def register_model_tools(mcp) -> None:
                 "status": "error",
                 "error": f"import_relap5 returned None for path: {path}",
             }
+
+        # Post-import connection patching
+        try:
+            _patch_junction_connections(model, path)
+        except Exception as exc:
+            log.warning(f"Failed to post-patch junction connections: {exc}")
+
         model_id = uuid.uuid4().hex[:8]
         _session.register(model_id, model)
         return {"model_id": model_id, "status": "ok"}

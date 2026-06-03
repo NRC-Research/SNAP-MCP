@@ -137,6 +137,104 @@ def _enrich_enum_error(exc_msg: str) -> str:
         except Exception:
             pass
     return exc_msg
+def _serialize_property(val, include_all=False):
+    """Serialize property value recursively, converting table and list wrappers to standard Python representations."""
+    try:
+        from snap.codes.properties import PropertyTable, PropertyValueList, PropertyValue
+        if isinstance(val, PropertyTable):
+            table_data = []
+            for r_idx in range(len(val)):
+                row = val[r_idx]
+                row_vals = []
+                for c_idx in range(len(row._enabled_props)):
+                    row_vals.append(_serialize_property(row[c_idx], include_all))
+                table_data.append(row_vals)
+            return table_data
+        elif isinstance(val, PropertyValueList):
+            return [_serialize_property(item, include_all) for item in val]
+        elif isinstance(val, PropertyValue):
+            raw_val = val.value
+            try:
+                if isinstance(raw_val, float) and math.isnan(raw_val):
+                    return None
+            except Exception:
+                pass
+            if str(raw_val) == "Unknown":
+                return None
+            return _serialize_property(raw_val, include_all)
+    except ImportError:
+        pass
+
+    if hasattr(val, "__iter__") and not isinstance(val, (str, bytes, dict)):
+        return [_serialize_property(item, include_all) for item in val]
+    elif hasattr(val, "java_object"):
+        return str(val)
+    else:
+        return val
+
+
+def _loose_compare(val1, val2) -> bool:
+    """Helper to loosely compare float values, strings, lists, or enums."""
+    if val1 == val2:
+        return True
+    if isinstance(val1, (list, tuple)) and isinstance(val2, (list, tuple)):
+        if len(val1) != len(val2):
+            return False
+        return all(_loose_compare(x, y) for x, y in zip(val1, val2))
+    
+    def norm(v):
+        if v is None:
+            return ""
+        s = str(v).strip().lower()
+        try:
+            return f"{float(v):.6g}"
+        except (TypeError, ValueError):
+            pass
+        if "." in s:
+            s = s.split(".")[-1]
+        return s.replace("_", " ").replace("-", " ")
+
+    return norm(val1) == norm(val2)
+
+
+def _normalize_table_rows(prop_name: str, rows: list) -> list:
+    """Auto-pads/redirects table rows for specific components to match SNAP columns."""
+    normalized = []
+    for r in rows:
+        r_list = list(r) if isinstance(r, (list, tuple)) else [r]
+        if "tdv_data" in prop_name:
+            if len(r_list) == 3:
+                r_list = [None, r_list[0], r_list[1], r_list[2], 0.0]
+            elif len(r_list) == 4:
+                r_list = [None, r_list[0], r_list[1], r_list[2], r_list[3]]
+        elif "tdj_data" in prop_name:
+            if len(r_list) == 2:
+                r_list = [None, r_list[0], r_list[1]]
+        normalized.append(r_list)
+    return normalized
+
+
+def _unwrap_enum_value(val, current_val):
+    """Unwraps enum proxy objects to their raw values if target is not EnumProperty."""
+    from snap.codes.properties import EnumProperty, PropertyValueList
+    
+    is_enum = isinstance(current_val, EnumProperty)
+    if isinstance(current_val, PropertyValueList):
+        try:
+            if len(current_val) > 0:
+                is_enum = isinstance(current_val[0], EnumProperty)
+        except Exception:
+            pass
+            
+    if is_enum:
+        return val
+        
+    if isinstance(val, (list, tuple)):
+        return [v._value if hasattr(v, "_value") else v for v in val]
+    elif hasattr(val, "_value"):
+        return val._value
+    return val
+
 
 
 def register_component_tools(mcp) -> None:
@@ -256,6 +354,13 @@ def register_component_tools(mcp) -> None:
             except Exception as exc:
                 warnings.append(f"Failed to set initial PIPE geometry or ICs: {exc}")
 
+        # Auto-set ic_input_format to 3 if temperature is specified for SINGLE_VOLUME
+        if type == "SINGLE_VOLUME" and "temperature" in properties and "ic_input_format" not in properties:
+            try:
+                setattr(comp, "ic_input_format", 3)
+            except Exception as exc:
+                warnings.append(f"Failed to auto-set ic_input_format: {exc}")
+
         # Apply remaining properties
         for k, v in properties.items():
             try:
@@ -273,7 +378,42 @@ def register_component_tools(mcp) -> None:
                         v = getattr(enum_class, class_name_sel)()
                     except Exception:
                         pass
-                setattr(comp, k, v)
+
+                # Intercept table properties
+                k_target = k + "_table" if hasattr(comp, k + "_table") else k
+                try:
+                    current_val = getattr(comp, k_target)
+                except Exception:
+                    current_val = None
+
+                from snap.codes.properties import PropertyTable
+                if isinstance(current_val, PropertyTable):
+                    if not isinstance(v, (list, tuple)):
+                        warnings.append(f"Property '{k}' is a table and expects a list of rows.")
+                        continue
+                    rows = []
+                    for r in v:
+                        if isinstance(r, (list, tuple)):
+                            rows.append(list(r))
+                        else:
+                            rows.append([r])
+                    rows = _normalize_table_rows(k_target, rows)
+                    try:
+                        new_len = len(rows)
+                        curr_len = len(current_val)
+                        if new_len < curr_len:
+                            try:
+                                for idx in range(curr_len - 1, new_len - 1, -1):
+                                    current_val.remove_row(idx)
+                            except Exception:
+                                pass
+                        current_val.read(rows)
+                    except Exception as exc:
+                        warnings.append(f"Failed to set table data for '{k}': {exc}")
+                    continue
+
+                v = _unwrap_enum_value(v, current_val)
+                setattr(comp, k_target, v)
             except Exception as exc:
                 enriched = _enrich_enum_error(str(exc))
                 warnings.append(f"Could not set property '{k}': {enriched}")
@@ -362,8 +502,17 @@ def register_component_tools(mcp) -> None:
                 continue
             if not include_all and attr.endswith("_enabled"):
                 continue
+            # If this is a _table property, skip it to avoid duplicates when its base property is serialized
+            if attr.endswith("_table") and attr[:-6] in dir(comp):
+                continue
             try:
-                val = getattr(comp, attr)
+                # Redirect to table property if it exists
+                table_attr = attr + "_table"
+                if hasattr(comp, table_attr):
+                    val = getattr(comp, table_attr)
+                else:
+                    val = getattr(comp, attr)
+
                 if callable(val):
                     continue
                 # Normalize values
@@ -371,9 +520,8 @@ def register_component_tools(mcp) -> None:
                     val_str = str(val)
                     if not include_all and ("disabled" in val_str.lower() or "ValueDisabledException" in val_str):
                         continue
-                    properties[attr] = val_str
-                else:
-                    properties[attr] = val
+                serialized = _serialize_property(val, include_all)
+                properties[attr] = serialized
             except Exception:
                 pass
 
@@ -429,6 +577,11 @@ def register_component_tools(mcp) -> None:
                     target_obj = getattr(target_obj, part)
                 prop_name = parts[-1]
 
+            # Redirect to table property if it exists
+            table_prop = prop_name + "_table"
+            if hasattr(target_obj, table_prop):
+                prop_name = table_prop
+
             # Resolve enum strings if given
             if isinstance(value, str) and "." in value:
                 try:
@@ -439,16 +592,48 @@ def register_component_tools(mcp) -> None:
                 except Exception:
                     pass
 
-            # Scalar-to-list broadcasting logic
+            # Get current value for type checks / interception
             try:
                 current_val = getattr(target_obj, prop_name)
-                if hasattr(current_val, "__len__") and not isinstance(current_val, (str, bytes, dict)):
-                    if not hasattr(value, "__len__") or isinstance(value, (str, bytes)):
-                        value = [value] * len(current_val)
             except Exception:
-                pass
+                current_val = None
 
-            setattr(target_obj, prop_name, value)
+            # Intercept table properties
+            from snap.codes.properties import PropertyTable
+            if isinstance(current_val, PropertyTable):
+                if not isinstance(value, (list, tuple)):
+                    return {"status": "error", "error": f"Property '{name}' is a table and expects a list of rows."}
+                rows = []
+                for r in value:
+                    if isinstance(r, (list, tuple)):
+                        rows.append(list(r))
+                    else:
+                        rows.append([r])
+                rows = _normalize_table_rows(prop_name, rows)
+                try:
+                    new_len = len(rows)
+                    curr_len = len(current_val)
+                    if new_len < curr_len:
+                        try:
+                            for idx in range(curr_len - 1, new_len - 1, -1):
+                                current_val.remove_row(idx)
+                        except Exception:
+                            pass
+                    current_val.read(rows)
+                except Exception as exc:
+                    return {"status": "error", "error": f"Failed to set table data: {exc}"}
+            else:
+                # Scalar-to-list broadcasting logic (only for lists, not PropertyTable)
+                try:
+                    if hasattr(current_val, "__len__") and not isinstance(current_val, (str, bytes, dict)):
+                        if not hasattr(value, "__len__") or isinstance(value, (str, bytes)):
+                            value = [value] * len(current_val)
+                except Exception:
+                    pass
+
+                # Set the property
+                value = _unwrap_enum_value(value, current_val)
+                setattr(target_obj, prop_name, value)
 
             # Auto-calculate elevation change (dzx) if vertical_angle or x_length is updated
             if prop_name == "vertical_angle":
@@ -476,9 +661,30 @@ def register_component_tools(mcp) -> None:
                 except Exception:
                     pass
 
-            return {"status": "ok"}
+            # Read back and verify the write succeeded
+            read_back_raw = getattr(target_obj, prop_name)
+            read_back = _serialize_property(read_back_raw)
+            mismatch = not _loose_compare(value, read_back)
+            
+            response = {"status": "ok", "new_value": read_back}
+            if mismatch:
+                response["warning"] = f"Verification warning: set value '{value}' does not match read-back value '{read_back}'."
+            return response
+
         except Exception as exc:
-            enriched = _enrich_enum_error(str(exc))
+            exc_str = str(exc)
+            if "disabled" in exc_str.lower() or "ValueDisabledException" in exc_str:
+                if prop_name in ("temperature", "void_fraction") and hasattr(target_obj, "ic_input_format"):
+                    return {
+                        "status": "error",
+                        "error": f"Property '{name}' is disabled. You must set 'ic_input_format' to 3 (Press_Temp_Equilib_Cond) first to enable it."
+                    }
+                if prop_name in ("temperature", "void_fraction") and hasattr(target_obj, "ic_input_format_tdv"):
+                    return {
+                        "status": "error",
+                        "error": f"Property '{name}' is disabled. You must set 'ic_input_format_tdv' to TDVTFlagSel.P_T or similar first."
+                    }
+            enriched = _enrich_enum_error(exc_str)
             return {"status": "error", "error": enriched}
 
     @mcp.tool()
@@ -628,6 +834,58 @@ def register_component_tools(mcp) -> None:
             return {"status": "error", "error": f"Failed to set PIPE geometry: {exc}"}
 
     @mcp.tool()
+    def set_properties_bulk(
+        model_id: str,
+        cc_list: list[int],
+        name: str,
+        value: object,
+    ) -> dict:
+        """Set a property on multiple RELAP components in bulk.
+
+        Parameters
+        ----------
+        model_id : str
+        cc_list : list[int]
+            List of component numbers.
+        name : str
+            Property name.
+        value : object
+            Property value to set.
+        """
+        results = {}
+        for cc in cc_list:
+            try:
+                res = set_component_property(model_id, cc, name, value)
+                results[str(cc)] = res
+            except Exception as exc:
+                results[str(cc)] = {"status": "error", "error": str(exc)}
+        return {"status": "ok", "results": results}
+
+    @mcp.tool()
+    def delete_component(
+        model_id: str,
+        cc: int,
+    ) -> dict:
+        """Delete a component from the RELAP model.
+
+        Parameters
+        ----------
+        model_id : str
+        cc : int
+            Component number.
+        """
+        model = _session.get(model_id)
+        ctype, comp = find_component(model, cc)
+        if comp is None:
+            return {"status": "error", "error": f"Component CC {cc} not found in model"}
+            
+        try:
+            model.java_model.removeComponent(comp.java_object)
+            return {"status": "ok", "component_number": cc}
+        except Exception as exc:
+            return {"status": "error", "error": f"Failed to delete component: {exc}"}
+
+    @mcp.tool()
     def get_component_schema(component_type: str) -> dict:
         """Return the documentation and key properties for a RELAP component type.
 
@@ -652,14 +910,14 @@ def register_component_tools(mcp) -> None:
                 },
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
-                    "flow_area": "float or list[float] — flow area in m²",
-                    "x_length": "float or list[float] — volume length in m",
-                    "hydraulic_diameter": "float or list[float] — hydraulic diameter in m",
-                    "vertical_angle": "float or list[float] — vertical angle in degrees",
-                    "x_wall_roughness": "float or list[float] — wall roughness in m (default 4.6e-5)",
-                    "pressure": "float or list[float] — initial pressure in Pa",
-                    "temperature": "float or list[float] — initial temperature in K",
-                    "void_fraction": "float or list[float] — initial void fraction (0 for liquid, 1 for steam)",
+                    "flow_area": "float or list[float] — flow area in m² (scalar or list of size cell_count - 1 / junctions)",
+                    "x_length": "float or list[float] — volume length in m (scalar or list of size cell_count)",
+                    "hydraulic_diameter": "float or list[float] — hydraulic diameter in m (scalar or list of size cell_count - 1 / junctions)",
+                    "vertical_angle": "float or list[float] — vertical angle in degrees (scalar or list of size cell_count)",
+                    "x_wall_roughness": "float or list[float] — wall roughness in m (default 4.6e-5, scalar or list of size cell_count)",
+                    "pressure": "float or list[float] — initial pressure in Pa (scalar or list of size cell_count)",
+                    "temperature": "float or list[float] — initial temperature in K (scalar or list of size cell_count). Requires 'ic_format' / 'ic_input_format' set to 3 to be enabled.",
+                    "void_fraction": "float or list[float] — initial void fraction (0 for liquid, 1 for steam). Requires format that enables void fraction (e.g. 0).",
                     "ic_input_format": "int or list[int] — initial condition format: 0=Press_Liq_E_Vap_E_Void_Frac, 3=Press_Temp_Equilib_Cond (default)"
                 },
                 "guidance": "Use set_pipe_geometry() and set_pipe_ics() for convenient bulk/uniform geometry and initial condition setting."
@@ -669,15 +927,15 @@ def register_component_tools(mcp) -> None:
                 "initializer_fields": {},
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
-                    "flow_area": "float — flow area in m²",
-                    "x_length": "float — volume length in m",
+                    "flow_area": "float — flow area in m² (scalar, must be > 0.0)",
+                    "x_length": "float — volume length in m (scalar, must be > 0.0)",
                     "vertical_angle": "float — vertical angle in degrees. Automatically calculates dzx (elevation change).",
                     "dzx": "float — elevation change in m (automatically computed from length and angle)",
                     "x_wall_roughness": "float — wall roughness in m (default 4.6e-5)",
                     "pressure": "float — initial pressure in Pa",
-                    "temperature": "float — initial temperature in K",
-                    "void_fraction": "float — initial void fraction (0 for liquid, 1 for steam)",
-                    "ic_input_format": "enum (CellICFormatSelEditorv) — e.g. 'CellICFormatSelEditorv.Press_Temp_Equilib_Cond'"
+                    "temperature": "float — initial temperature in K (requires 'ic_input_format' set to Press_Temp_Equilib_Cond/3 to be enabled)",
+                    "void_fraction": "float — initial void fraction (0 for liquid, 1 for steam, requires format enabling void fraction)",
+                    "ic_input_format": "enum (CellICFormatSelEditorv) — e.g. 'CellICFormatSelEditorv.Press_Temp_Equilib_Cond' (default is usually 0, set to 3 to enable temperature)"
                 }
             },
             "TIME_DEPENDENT_VOLUME": {
@@ -685,22 +943,23 @@ def register_component_tools(mcp) -> None:
                 "initializer_fields": {},
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
-                    "tdv_data": "list[list] — time-dependent table data (e.g. rows of [time, pressure, temperature])",
-                    "ic_input_format_tdv": "enum (TDVTFlagSel) — table format selector: 'TDVTFlagSel.P_MT' (default) or 'TDVTFlagSel.P_LE_VE_VF'"
+                    "tdv_data": "list[list] — time-dependent table data (nested list of time/thermodynamic data rows, e.g. [[0.0, 15.5e6, 550.0], [100.0, 15.5e6, 550.0]]). Table format / columns depend on 'ic_input_format_tdv'.",
+                    "ic_input_format_tdv": "enum (TDVTFlagSel) — table format selector: 'TDVTFlagSel.P_MT' (default, columns are Time, Pressure, Temp/Enthalpy) or 'TDVTFlagSel.P_LE_VE_VF'"
                 }
             },
             "SINGLE_JUNCTION": {
                 "description": "Junction connecting two volumes.",
                 "initializer_fields": {
                     "area": "float — flow area in m² (default 0.0). Can also use 'flow_area'.",
-                    "inlet": "str — source connection string in 9-digit format or component name.",
-                    "outlet": "str — target connection string in 9-digit format or component name."
+                    "inlet": "str — source connection string in 9-digit format (CCcell000Face) or component name.",
+                    "outlet": "str — target connection string in 9-digit format (CCcell000Face) or component name."
                 },
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
                     "flow_area": "float — junction flow area in m²",
-                    "inlet": "str — source connection string",
-                    "outlet": "str — target connection string"
+                    "inlet": "str — source connection string (e.g. '101010002')",
+                    "outlet": "str — target connection string (e.g. '102010001')",
+                    "hydraulic_diameter": "float — hydraulic diameter in m (must be > 0.0)"
                 }
             },
             "TIME_DEPENDENT_JUNCTION": {
@@ -712,7 +971,7 @@ def register_component_tools(mcp) -> None:
                 },
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
-                    "tdj_data": "list[list] — time-dependent table data (e.g. rows of [time, mass_flow] or [time, velocity])"
+                    "tdj_data": "list[list] — time-dependent table data (nested list of rows, e.g. [[0.0, 120.0], [10.0, 120.0]] for time vs mass flow or velocity). Depends on junction type/flags."
                 }
             },
             "VALVE": {
@@ -725,7 +984,7 @@ def register_component_tools(mcp) -> None:
                 "key_properties": {
                     "name": "str — component name (max 8 characters)",
                     "valve_type": "enum (ValveTypeSel) — e.g. 'ValveTypeSel.Servo_Valve' or 'ValveTypeSel.Trip_Valve'",
-                    "valve_table": "list[list] — valve normalized area table vs stem position",
+                    "valve_table": "list[list] — valve normalized area table vs stem position (nested list of rows: [[normalized_stem, normalized_area]])",
                     "init_position": "float — initial stem position (0.0 to 1.0)"
                 }
             },

@@ -4798,10 +4798,25 @@
 - `volin`: 1.66472E-3
 
 ### VESSEL 10
+- `_nrsx`: 1
+- `_ntsx`: 1
+- `_nasx`: 3
+- `vess_type`: VessType.RPV
+- `epsw`: 1.0E-5
 
 ### VESSEL 120
+- `_nrsx`: 10
+- `_ntsx`: 1
+- `_nasx`: 6
+- `vess_type`: VessType.RPV
+- `epsw`: 1.0E-6
 
 ### VESSEL 160
+- `_nrsx`: 7
+- `_ntsx`: 1
+- `_nasx`: 6
+- `vess_type`: VessType.RPV
+- `epsw`: 1.0E-6
 
 ### HEAT_STRUCTURE 1020
 - `hscyl`: 1

@@ -83,17 +83,38 @@ Set properties:
 add_component(model_id, 'VESSEL', 10, {})
 ```
 
+Set properties:
+- `_nrsx` = `1`
+- `_ntsx` = `1`
+- `_nasx` = `3`
+- `vess_type` = `VessType.RPV`
+- `epsw` = `1.0E-5`
+
 ### VESSEL 120 (c120)
 
 ```
 add_component(model_id, 'VESSEL', 120, {})
 ```
 
+Set properties:
+- `_nrsx` = `10`
+- `_ntsx` = `1`
+- `_nasx` = `6`
+- `vess_type` = `VessType.RPV`
+- `epsw` = `1.0E-6`
+
 ### VESSEL 160 (c160)
 
 ```
 add_component(model_id, 'VESSEL', 160, {})
 ```
+
+Set properties:
+- `_nrsx` = `7`
+- `_ntsx` = `1`
+- `_nasx` = `6`
+- `vess_type` = `VessType.RPV`
+- `epsw` = `1.0E-6`
 
 ### HEAT_STRUCTURE 1020 (hs1020)
 
@@ -68006,12 +68027,12 @@ Set properties:
 
 ## Step 3 — Connect components
 
-Use `connect_components()` to wire the hydraulic topology:
+Use `connect_components()` for 1-D to 1-D connections, and `connect_pipe_to_vessel()` when the target is a VESSEL:
 
 ```
 connect_components(model_id, 5, "inlet", "[JUN1] Inlet", 1, 1)
-connect_components(model_id, 5, "outlet", "[JUN1] Inlet", 10, 3)
-connect_components(model_id, 15, "inlet", "[JUN1] Inlet", 10, 1)
+connect_pipe_to_vessel(model_id, 5, "outlet", 10, 3, vessel_ring=1, vessel_sector=1, vessel_face="Positive Azimuthal")
+connect_pipe_to_vessel(model_id, 15, "inlet", 10, 1, vessel_ring=1, vessel_sector=1, vessel_face="Positive Azimuthal")
 connect_components(model_id, 15, "outlet", "[JUN1] Inlet", 16, 1)
 ```
 

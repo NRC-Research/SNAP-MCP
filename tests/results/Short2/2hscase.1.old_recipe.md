@@ -187,7 +187,7 @@ add_component(model_id, 'TRIP', 1, {})
 
 ## Step 3 — Connect components
 
-Use `connect_components()` to wire the hydraulic topology:
+Use `connect_components()` for 1-D to 1-D connections, and `connect_pipe_to_vessel()` when the target is a VESSEL:
 
 ```
 connect_components(model_id, 10, "inlet", "[JUN1] Inlet", 8, 1)

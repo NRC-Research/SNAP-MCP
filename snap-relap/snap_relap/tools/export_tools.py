@@ -410,7 +410,9 @@ def register_export_tools(mcp) -> None:
                 "exported_files": [],
             }
             
-        result = model.export(path)
+        import pathlib
+        path_obj = pathlib.Path(path)
+        result = model.export(path_obj)
         if result is None:
             return {
                 "status": "error",
