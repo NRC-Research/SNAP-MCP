@@ -44,8 +44,16 @@ def run_test():
     print("\nSUCCESS: Python connectivity validation works as expected!")
     
     # 4. Connect component and verify errors disappear
+    print("\nCreating target volume components (CC 101 and CC 102)...")
+    vol_creator = getattr(model, "create_single_volume")
+    vol1 = vol_creator(101)
+    vol2 = vol_creator(102)
+    
     print("\nConnecting junction inlet and outlet...")
     # Inlet = CC 101, cell 1, face 2. Outlet = CC 102, cell 1, face 1
+    # Connection string format: {cc}{cell:02d}000{face}
+    # For CC 101, cell 1, face 2: "101010002"
+    # For CC 102, cell 1, face 1: "102010001"
     junction.inlet = "101010002"
     junction.outlet = "102010001"
     
