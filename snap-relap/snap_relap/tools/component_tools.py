@@ -30,6 +30,17 @@ def register_component_tools(mcp) -> None:
             Component number / ID.
         properties : dict, optional
             Initial property values to set on the component.
+            Special creation-only properties depending on component type:
+            - PIPE: 'cells' or 'num_cells' or 'numberOfCells' (int, default 1) - number of volumes.
+            - SINGLE_JUNCTION / TIME_DEPENDENT_JUNCTION / VALVE:
+                - 'area' or 'flow_area' (float, default 0.0) - flow area.
+                - 'inlet' (str, optional) - source connection string.
+                - 'outlet' (str, optional) - target connection string.
+            - HEAT_STRUCTURE:
+                - 'geometry' (int, default 1) - geometry number.
+                - 'mesh_point_num' (int, default 2) - number of mesh points.
+            - CONTROL_BLOCK:
+                - 'cb_type' (str, default 'sum') - type of control block.
 
         Returns
         -------
@@ -52,10 +63,18 @@ def register_component_tools(mcp) -> None:
         try:
             # Dispatch to appropriate creation signatures
             if type == "PIPE":
-                cells = int(properties.pop("cells", 1))
+                cells_val = properties.pop("cells", None)
+                if cells_val is None:
+                    cells_val = properties.pop("num_cells", None)
+                if cells_val is None:
+                    cells_val = properties.pop("numberOfCells", 1)
+                cells = int(cells_val)
                 comp = creator(cells, cc)
             elif type in ("SINGLE_JUNCTION", "TIME_DEPENDENT_JUNCTION", "VALVE"):
-                area = float(properties.pop("area", 0.0))
+                area_val = properties.pop("area", None)
+                if area_val is None:
+                    area_val = properties.pop("flow_area", 0.0)
+                area = float(area_val)
                 inlet = properties.pop("inlet", None)
                 outlet = properties.pop("outlet", None)
                 comp = creator(area, inlet, outlet, cc)
