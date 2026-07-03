@@ -6,12 +6,31 @@ then eagerly starts the MEBatch process so the first tool call has no delay.
 """
 import os
 import re
+import subprocess
 import sys
 import threading
 import logging
 from typing import Optional, Tuple
 
 log = logging.getLogger(__name__)
+
+# On Windows the MCP server runs under pythonw.exe (no console), so any console
+# child SNAP's launcher spawns (MEBatch.exe / the py4j JVM) allocates a NEW
+# console and a visible black window pops up on the user's desktop. SNAP's own
+# code does the spawning, so default every Popen in THIS process to
+# CREATE_NO_WINDOW before snap.* is imported. Pipes (py4j's port handshake)
+# are unaffected; callers that explicitly ask for a console still get one.
+if sys.platform == "win32":
+    _OrigPopen = subprocess.Popen
+
+    class _NoWindowPopen(_OrigPopen):
+        def __init__(self, *args, **kwargs):
+            flags = kwargs.get("creationflags", 0) or 0
+            if not flags & subprocess.CREATE_NEW_CONSOLE:
+                kwargs["creationflags"] = flags | subprocess.CREATE_NO_WINDOW
+            super().__init__(*args, **kwargs)
+
+    subprocess.Popen = _NoWindowPopen
 
 SNAP_PYTHON = os.environ.get("SNAP_PYTHON_PATH", "")
 if not SNAP_PYTHON:
