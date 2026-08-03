@@ -4,12 +4,17 @@ Wraps the NRC-Research/vessel2vessel package (the v2v library) to compute
 the single-junction records that connect a Cartesian core VESSEL to the
 cylindrical VESSEL it replaces, per the VESSEL-in-VESSEL modeling method.
 
-These tools are pure computation: they do not touch the Py4J/SNAP gateway,
-so they work even while MEBatch is initializing.
+compute_vessel_junctions() is pure computation (no Py4J/SNAP gateway) and
+returns SNAP paste-format text. apply_vessel_junctions() additionally
+creates the two VESSEL JUNCTION components in a live model.
 """
 from __future__ import annotations
 
 from pathlib import Path
+
+# Axial face constants from cfnplugin.trace.components.Vessel
+_FACE_POSITIVE_AXIAL = 2   # top face of the cell ("Outlet" in the GUI)
+_FACE_NEGATIVE_AXIAL = -2  # bottom face of the cell ("Inlet" in the GUI)
 
 
 def _require_v2v():
@@ -35,21 +40,17 @@ def _as_matrix(value, rows, cols, name):
     return [[float(x) for x in r] for r in value]
 
 
-def compute_vessel_junctions_impl(
-        core_map, ring_radii, sector_angles, offset_angle,
-        cylindrical_lower_level, cylindrical_upper_level,
-        cartesian_lower_level, cartesian_upper_level,
-        assembly_flow_area, dh_cartesian,
-        dh_cylindrical_lower, dh_cylindrical_upper,
-        assembly_flow_area_upper=None, dh_cartesian_upper=None,
-        min_junction_area_fraction=1e-6):
-    """Compute the SNAP VESSEL junction records. See the MCP tool docstring."""
+def _partition_core(core_map, ring_radii, sector_angles, offset_angle):
+    """Validate inputs and partition the reduced hydraulic core.
+
+    Returns (snap_shape, areas) where snap_shape is the core map cropped
+    to the assembly bounding box (values 0/1) and areas is the
+    ndarray[rows, cols, rings, sectors] of overlap area fractions.
+    """
     _require_v2v()
     from v2v.partitioning import (
         reduce_shape, build_sectors, build_rings, compute_partition)
-    from v2v.snapjuns import build_junctions
 
-    # --- validate the core map -------------------------------------------
     if not core_map or any(len(r) != len(core_map[0]) for r in core_map):
         raise ValueError("core_map rows must all have the same length")
     allowed = {0, 1, -1, -2}
@@ -60,16 +61,14 @@ def compute_vessel_junctions_impl(
             "-1 (baffle), -2 (reflector); found %s" % sorted(bad))
     if not any(v == 1 for row in core_map for v in row):
         raise ValueError("core_map contains no hydraulic assemblies (value 1)")
-
-    # --- validate rings / sectors ----------------------------------------
     if sorted(ring_radii) != list(ring_radii):
         raise ValueError("ring_radii must be increasing (inner to outer)")
     if abs(sum(sector_angles) - 360.0) > 1e-9:
         raise ValueError("sector_angles must sum to 360 (got %r)" % (sum(sector_angles),))
+
     # cumulative sector angles, as the partitioning expects
     sa = [sum(sector_angles[:n + 1]) for n in range(len(sector_angles))]
 
-    # --- partition the hydraulic (reduced) core --------------------------
     # Junction generation uses only the hydraulic cells: the core map is
     # cropped to the bounding box of the assemblies, baffles/reflectors
     # dropped. The outer ring is doubled so it fully envelops the outer
@@ -81,11 +80,51 @@ def compute_vessel_junctions_impl(
     rings_safe = ring_radii[:-1] + [ring_radii[-1] * 2.0]
     sectors = build_sectors(rows, cols, sa, float(offset_angle), 1)
     rings = build_rings(rings_safe, 1)
-    areas, edges, centroids = compute_partition(snap_shape, ring_radii, rings, sectors, 1)
+    areas, _edges, _centroids = compute_partition(snap_shape, ring_radii, rings, sectors, 1)
+    return snap_shape, areas
 
-    # --- per-assembly data, broadcast scalars ----------------------------
-    # Matrices are in the same orientation as core_map (row 0 = top of the
-    # visual layout), sized to the reduced hydraulic core (rows x cols).
+
+def _junction_records(snap_shape, areas, n_rings, n_sectors,
+                      fa_matrix, dh_cart, dh_cyl, lower_limit):
+    """Yield one record per single junction, in the same order and with
+    the same area threshold as v2v.snapjuns.build_junctions.
+
+    Each record: (ring, sector, x, y, area, dh) — all 1-based; y counts
+    from the bottom of the Cartesian core (SNAP convention).
+    """
+    rows = len(snap_shape)
+    cols = len(snap_shape[0])
+    for r in range(rows):
+        for c in range(cols):
+            for rin in range(n_rings):
+                for sec in range(n_sectors):
+                    frac = areas[r, c, rin, sec]
+                    if frac > lower_limit:
+                        yield (rin + 1, sec + 1, c + 1, rows - r,
+                               frac * fa_matrix[r][c],
+                               min(dh_cart[r][c], dh_cyl[rin][sec]))
+
+
+def compute_vessel_junctions_impl(
+        core_map, ring_radii, sector_angles, offset_angle,
+        cylindrical_lower_level, cylindrical_upper_level,
+        cartesian_lower_level, cartesian_upper_level,
+        assembly_flow_area, dh_cartesian,
+        dh_cylindrical_lower, dh_cylindrical_upper,
+        assembly_flow_area_upper=None, dh_cartesian_upper=None,
+        min_junction_area_fraction=1e-6):
+    """Compute the SNAP VESSEL junction records. See the MCP tool docstring."""
+    snap_shape, areas = _partition_core(core_map, ring_radii, sector_angles, offset_angle)
+    from v2v.snapjuns import build_junctions
+
+    rows = len(snap_shape)
+    cols = len(snap_shape[0])
+    n_rings = len(ring_radii)
+    n_sectors = len(sector_angles)
+
+    # per-assembly data, scalars broadcast. Matrices are in the same
+    # orientation as core_map (row 0 = top of the visual layout), sized to
+    # the reduced hydraulic core (rows x cols).
     fa_lower = _as_matrix(assembly_flow_area, rows, cols, "assembly_flow_area")
     fa_upper = _as_matrix(
         assembly_flow_area if assembly_flow_area_upper is None else assembly_flow_area_upper,
@@ -94,12 +133,9 @@ def compute_vessel_junctions_impl(
     dh_cart_upper = _as_matrix(
         dh_cartesian if dh_cartesian_upper is None else dh_cartesian_upper,
         rows, cols, "dh_cartesian_upper")
-    n_rings = len(ring_radii)
-    n_sectors = len(sector_angles)
     dh_cyl_lower = _as_matrix(dh_cylindrical_lower, n_rings, n_sectors, "dh_cylindrical_lower")
     dh_cyl_upper = _as_matrix(dh_cylindrical_upper, n_rings, n_sectors, "dh_cylindrical_upper")
 
-    # --- build the junction records --------------------------------------
     lower_lines, upper_lines, summary_lines, core_area, tot_juns, warnings = build_junctions(
         snap_shape, areas, n_rings, n_sectors,
         fa_lower, fa_upper,
@@ -123,6 +159,137 @@ def compute_vessel_junctions_impl(
         "lower_junction_input": "".join(lower_lines),
         "upper_junction_input": "".join(upper_lines),
         "summary": "".join(summary_lines),
+    }
+
+
+def _build_junction_component(model, comp_num, name,
+                              source_cc, target_cc,
+                              source_level, target_level, records):
+    """Create one VESSEL JUNCTION component and populate its single
+    junctions.
+
+    records: iterable of (source_a, source_b, target_a, target_b, fa, dh)
+    where (a, b) are the 1-based planar coordinates on each vessel —
+    (ring, sector) for a cylindrical side, (x, y) for a Cartesian side.
+
+    Ordering constraints (from the plugin source): vessels must be set
+    before faces/levels (set_target_vessel resets them to defaults), and
+    each single junction must be added to the component before its cell
+    indices are set (the owner back-reference is installed by addSjun).
+    """
+    from snap.codes.trace.components import V2VConnection, V2VSingleJun
+
+    if comp_num is not None and comp_num >= 1000:
+        raise ValueError(
+            "VESSEL JUNCTION component numbers must be < 1000 "
+            "(junction idents are derived as number*1000+n); got %d" % comp_num)
+
+    vj = model._create_component(V2VConnection, "Vessel Junctions", comp_num)
+    jo = vj.java_object
+    if name:
+        vj.name = name
+    vj.set_source_vessel(str(source_cc))
+    vj.set_target_vessel(str(target_cc))
+    # levels are 0-based in the Java model; the junction attaches to the
+    # top face of the source cell and the bottom face of the target cell
+    jo.setInletLocation(int(source_level) - 1)
+    jo.setOutletLocation(int(target_level) - 1)
+    jo.setInletFace(_FACE_POSITIVE_AXIAL)
+    jo.setOutletFace(_FACE_NEGATIVE_AXIAL)
+
+    count = 0
+    for sa_, sb, ta, tb, fa, dh in records:
+        elem = jo.getSjun().getClass().getComponentType().newInstance()
+        jo.addSjun(-1, elem)
+        entry = jo.getSjun()[count]
+        sj = V2VSingleJun(model, entry)
+        # tuple setter computes the planar index on the referenced vessel;
+        # the axial element is carried by inlet/outlet location above
+        sj.source_cell_index = (sa_, sb, 0)
+        sj.target_cell_index = (ta, tb, 0)
+        entry.setActiveJunction(True)
+        sj.fa = float(fa)
+        sj.hd = float(dh)
+        count += 1
+
+    export_ok = bool(jo.isOkayForExport(False))
+    return int(jo.getComponentNumber()), count, export_ok
+
+
+def apply_vessel_junctions_impl(
+        model, cylindrical_vessel_cc, cartesian_vessel_cc,
+        core_map, ring_radii, sector_angles, offset_angle,
+        cylindrical_lower_level, cylindrical_upper_level,
+        cartesian_lower_level, cartesian_upper_level,
+        assembly_flow_area, dh_cartesian,
+        dh_cylindrical_lower, dh_cylindrical_upper,
+        assembly_flow_area_upper=None, dh_cartesian_upper=None,
+        min_junction_area_fraction=1e-6,
+        lower_junction_number=None, upper_junction_number=None):
+    """Create both VESSEL JUNCTION components in a live model."""
+    snap_shape, areas = _partition_core(core_map, ring_radii, sector_angles, offset_angle)
+    rows = len(snap_shape)
+    cols = len(snap_shape[0])
+    n_rings = len(ring_radii)
+    n_sectors = len(sector_angles)
+
+    fa_lower = _as_matrix(assembly_flow_area, rows, cols, "assembly_flow_area")
+    fa_upper = _as_matrix(
+        assembly_flow_area if assembly_flow_area_upper is None else assembly_flow_area_upper,
+        rows, cols, "assembly_flow_area_upper")
+    dh_cart_lower = _as_matrix(dh_cartesian, rows, cols, "dh_cartesian")
+    dh_cart_upper = _as_matrix(
+        dh_cartesian if dh_cartesian_upper is None else dh_cartesian_upper,
+        rows, cols, "dh_cartesian_upper")
+    dh_cyl_lower = _as_matrix(dh_cylindrical_lower, n_rings, n_sectors, "dh_cylindrical_lower")
+    dh_cyl_upper = _as_matrix(dh_cylindrical_upper, n_rings, n_sectors, "dh_cylindrical_upper")
+    lim = float(min_junction_area_fraction)
+
+    # validate the vessel nodalizations against the inputs
+    cyl = model.vessel(str(cylindrical_vessel_cc))
+    cart = model.vessel(str(cartesian_vessel_cc))
+    cyl_r, cyl_t = int(cyl.java_object.getNrsx()), int(cyl.java_object.getNtsx())
+    cart_x, cart_y = int(cart.java_object.getNrsx()), int(cart.java_object.getNtsx())
+    if (cyl_r, cyl_t) != (n_rings, n_sectors):
+        raise ValueError(
+            "cylindrical vessel %s is %dr x %dt but inputs describe %dr x %dt"
+            % (cylindrical_vessel_cc, cyl_r, cyl_t, n_rings, n_sectors))
+    if (cart_x, cart_y) != (cols, rows):
+        raise ValueError(
+            "Cartesian vessel %s is %dx x %dy but the hydraulic core is %dx x %dy"
+            % (cartesian_vessel_cc, cart_x, cart_y, cols, rows))
+
+    # lower junction: cylindrical (top of its cell) -> Cartesian (bottom)
+    lower_records = (
+        (rin, sec, x, y, fa, dh)
+        for rin, sec, x, y, fa, dh in _junction_records(
+            snap_shape, areas, n_rings, n_sectors, fa_lower, dh_cart_lower, dh_cyl_lower, lim))
+    lower_num, lower_count, lower_ok = _build_junction_component(
+        model, lower_junction_number, "v2v lower",
+        cylindrical_vessel_cc, cartesian_vessel_cc,
+        cylindrical_lower_level, cartesian_lower_level, lower_records)
+
+    # upper junction: Cartesian (top of its cell) -> cylindrical (bottom)
+    upper_records = (
+        (x, y, rin, sec, fa, dh)
+        for rin, sec, x, y, fa, dh in _junction_records(
+            snap_shape, areas, n_rings, n_sectors, fa_upper, dh_cart_upper, dh_cyl_upper, lim))
+    upper_num, upper_count, upper_ok = _build_junction_component(
+        model, upper_junction_number, "v2v upper",
+        cartesian_vessel_cc, cylindrical_vessel_cc,
+        cartesian_upper_level, cylindrical_upper_level, upper_records)
+
+    num_assemblies = sum(v == 1 for row in snap_shape for v in row)
+    return {
+        "lower_junction": {"component_number": lower_num,
+                           "single_junctions": lower_count,
+                           "export_check_ok": lower_ok},
+        "upper_junction": {"component_number": upper_num,
+                           "single_junctions": upper_count,
+                           "export_check_ok": upper_ok},
+        "num_assemblies": num_assemblies,
+        "hydraulic_core_rows": rows,
+        "hydraulic_core_cols": cols,
     }
 
 
@@ -158,6 +325,10 @@ def register(mcp):
         Connection Edge Data paste format:
 
             0 <TAB> r:R, t:T, z:Z <TAB> x:X, y:Y, z:Z <TAB> area <TAB> Dh <TAB> 0
+
+        This is pure computation — no model is modified. To create the
+        junction components in a live model directly, use
+        apply_vessel_junctions() with the same geometry inputs.
 
         Parameters
         ----------
@@ -230,4 +401,76 @@ def register(mcp):
                 str(outdir / "snap_junctions_upper.dat"),
                 str(outdir / "junction_summary.dat"),
             ]
+        return result
+
+    @mcp.tool()
+    def apply_vessel_junctions(
+            model_id: str,
+            cylindrical_vessel_cc: int,
+            cartesian_vessel_cc: int,
+            core_map: list[list[int]],
+            ring_radii: list[float],
+            sector_angles: list[float],
+            offset_angle: float,
+            cylindrical_lower_level: int,
+            cylindrical_upper_level: int,
+            cartesian_lower_level: int,
+            cartesian_upper_level: int,
+            assembly_flow_area: float | list[list[float]],
+            dh_cartesian: float | list[list[float]],
+            dh_cylindrical_lower: float | list[list[float]],
+            dh_cylindrical_upper: float | list[list[float]],
+            assembly_flow_area_upper: float | list[list[float]] | None = None,
+            dh_cartesian_upper: float | list[list[float]] | None = None,
+            min_junction_area_fraction: float = 1e-6,
+            lower_junction_number: int | None = None,
+            upper_junction_number: int | None = None) -> dict:
+        """Create both vessel-in-vessel VESSEL JUNCTION components in a model.
+
+        Computes the same partitioning as compute_vessel_junctions() and
+        then builds the two VESSEL JUNCTION components directly in the
+        live model — no paste-into-dialog step:
+
+        - lower junction: cylindrical VESSEL (top face of
+          cylindrical_lower_level) -> Cartesian VESSEL (bottom face of
+          cartesian_lower_level)
+        - upper junction: Cartesian VESSEL (top face of
+          cartesian_upper_level) -> cylindrical VESSEL (bottom face of
+          cylindrical_upper_level)
+
+        Each single junction gets its source/target planar cell, flow
+        area (overlap fraction x assembly flow area), and hydraulic
+        diameter (min of the two sides). Friction and ICs are left at
+        defaults, matching the documented workflow.
+
+        The cylindrical vessel's rings x sectors must match
+        ring_radii/sector_angles, and the Cartesian vessel's x/y cell
+        counts must match the hydraulic (reduced) core — the tool
+        validates both and reports a clear error on mismatch.
+
+        VESSEL JUNCTION component numbers must be < 1000 (SNAP derives
+        junction idents as number*1000+n); omit the *_junction_number
+        parameters to auto-assign.
+
+        Geometry parameters are identical to compute_vessel_junctions()
+        — see that tool for their full descriptions.
+
+        Returns
+        -------
+        dict with the created component numbers, per-junction single
+        junction counts, and each component's export check result.
+        """
+        import snap_trace.session as session
+        model = session.get_model(model_id)
+        result = apply_vessel_junctions_impl(
+            model, cylindrical_vessel_cc, cartesian_vessel_cc,
+            core_map, ring_radii, sector_angles, offset_angle,
+            cylindrical_lower_level, cylindrical_upper_level,
+            cartesian_lower_level, cartesian_upper_level,
+            assembly_flow_area, dh_cartesian,
+            dh_cylindrical_lower, dh_cylindrical_upper,
+            assembly_flow_area_upper, dh_cartesian_upper,
+            min_junction_area_fraction,
+            lower_junction_number, upper_junction_number)
+        session.autosave(model_id)
         return result
