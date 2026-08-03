@@ -12,6 +12,12 @@ dependencies = [
     "pydantic>=2.0",
 ]
 
+[project.optional-dependencies]
+# vessel-in-vessel junction generation (compute_vessel_junctions tool)
+v2v = [
+    "vessel2vessel @ git+https://github.com/NRC-Research/vessel2vessel@ce84ee9ab9bb33919337358cefe5357ea14aae03",
+]
+
 [project.scripts]
 snap-trace-mcp = "mcp_server:main"
 

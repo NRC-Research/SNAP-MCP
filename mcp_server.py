@@ -46,6 +46,7 @@ from snap_trace.tools import (
     component_tools,
     connection_tools,
     export_tools,
+    v2v_tools,
 )
 import snap_trace.resources as resources
 
@@ -62,6 +63,8 @@ mcp = FastMCP(
         "Use set_vessel_table() to initialize VESSEL per-cell ICs (p, tl, tv, alp) and "
         "edge hydraulic diameters (hd_axial, hd_azimuthal, hd_radial) — "
         "these tables are not reachable via set_component_property(). "
+        "For vessel-in-vessel Cartesian core models use compute_vessel_junctions() "
+        "to generate the VESSEL junction Connection Edge Data from the core layout. "
         "See trace://workflow/analyst-guidance for scope and best practices. "
         "See trace://workflow/new-model for a step-by-step build guide. "
         "NRC TRACE modeling guidance: https://nrc-research.github.io/TRACE_guidance/"
@@ -73,6 +76,7 @@ model_tools.register(mcp)
 component_tools.register(mcp)
 connection_tools.register(mcp)
 export_tools.register(mcp)
+v2v_tools.register(mcp)
 resources.register(mcp)
 
 
@@ -88,7 +92,7 @@ _GATEWAY_LOCK = threading.Lock()
 # Tools that do NOT touch the Py4J gateway and must work during init/reset
 # (so an agent can poll readiness). Everything else fails fast while MEBatch is
 # coming up.
-_ALWAYS_ALLOWED = {"snap_status"}
+_ALWAYS_ALLOWED = {"snap_status", "compute_vessel_junctions"}
 _INITIALIZING_MSG = (
     "SNAP/MEBatch is still initializing or reconnecting (ready=false). "
     "Call snap_status() and wait until ready=true before retrying this tool — "
