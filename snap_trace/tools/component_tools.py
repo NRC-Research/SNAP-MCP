@@ -1,6 +1,8 @@
 """MCP tools: component add / update / list / schema."""
 from __future__ import annotations
 
+import math
+
 import snap_trace.session as session
 from snap_trace.component_map import (
     ALL_TYPES,
@@ -253,6 +255,35 @@ def _attr_num(obj, name):
         return _num_or_unset(getattr(obj, name))
     except Exception:
         return None
+
+
+def _deg(angle_rad):
+    """Convert an edge inclination from radians to degrees.
+
+    Passes through None and the 'unset' sentinel unchanged so an
+    uninitialized edge is never reported as a plausible 0.0 degrees.
+    """
+    if not isinstance(angle_rad, (int, float)) or isinstance(angle_rad, bool):
+        return angle_rad
+    return math.degrees(angle_rad)
+
+
+def _grav_from_angle(angle_rad):
+    """Derive the TRACE GRAV term from an edge's inclination angle.
+
+    GRAV is not a stored field.  In the plug-in, ``Edge.setGrav(g)`` writes
+    ``asin(g)`` into ``edgeAngle`` and ``Edge.getGrav()`` returns
+    ``sin(edgeAngle)`` -- so GRAV is a derived view of the angle, and the two
+    can never disagree.  The Java getter is not surfaced by SNAP's Python
+    binding (there is no ``edge.grav``; verified against the running gateway),
+    so we reproduce the same relationship here.
+
+    Returns None/'unset' unchanged rather than coercing, because sin() of a
+    sentinel would silently produce a plausible-looking number.
+    """
+    if not isinstance(angle_rad, (int, float)) or isinstance(angle_rad, bool):
+        return angle_rad
+    return math.sin(angle_rad)
 
 
 def _read_vessel_grid(table):
@@ -1139,7 +1170,25 @@ def register(mcp):
           fa      — junction flow area (m2)
           abrupt  — abrupt area-change flag (bool)
           orifice — orifice flag (bool)
-          angle   — junction inclination angle (deg)
+          angle     — junction inclination. RADIANS, not degrees (retained
+                      under its original name for existing callers; prefer
+                      angle_rad/angle_deg, which are unambiguous).
+          angle_rad — same value, explicitly radians
+          angle_deg — same inclination in degrees
+          grav      — the TRACE GRAV term for this junction, = sin(angle).
+                      0 = horizontal, +/-1 = vertical, signed inlet -> outlet.
+
+        On GRAV: it is a derived view of the angle, not a separate stored
+        field — the plug-in's setGrav(g) writes asin(g) into edgeAngle and
+        getGrav() returns sin(edgeAngle), so the two cannot disagree.  Whether
+        GRAV is user-editable depends on the model's IELV setting: editable at
+        IELV=0, locked read-only at IELV=1 (SNAP derives it from cell
+        elevations), and hidden entirely at IELV=2.  Call get_model_options()
+        to check before advising anyone to change it.
+
+        A GRAV of exactly +1.0 or -1.0 on a pipe-to-VESSEL junction is worth a
+        second look: SNAP clamps the computed ratio at 1.0, so an exact +/-1
+        can mean "clamped" rather than "genuinely vertical".
 
         Works on any 1-D hydraulic component that exposes edges (PIPE, TEE,
         PUMP, VALVE, PLENUM). Raises if the component has no edge table.
@@ -1188,6 +1237,7 @@ def register(mcp):
         rows = []
         for i, edge in enumerate(edges, start=1):
             face = "inlet" if i == 1 else "outlet" if i == n_edges else "interior"
+            angle_rad = _val(edge, "angle")
             rows.append({
                 "edge": i,
                 "face": face,
@@ -1198,7 +1248,10 @@ def register(mcp):
                 "fa": _val(edge, "fa"),
                 "abrupt": _val(edge, "abrupt"),
                 "orifice": _val(edge, "orifice"),
-                "angle": _val(edge, "angle"),
+                "angle": angle_rad,
+                "angle_rad": angle_rad,
+                "angle_deg": _deg(angle_rad),
+                "grav": _grav_from_angle(angle_rad),
             })
 
         return {
