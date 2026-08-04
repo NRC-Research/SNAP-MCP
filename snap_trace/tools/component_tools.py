@@ -9,6 +9,7 @@ from snap_trace.component_map import (
     COMPONENT_MAP,
     create_component,
     find_component,
+    invalidate_cc_index,
     iter_all_components,
 )
 from snap_trace.type_converter import set_property
@@ -759,6 +760,7 @@ def register(mcp):
 
         comp = create_component(model, component_type, component_number,
                                 properties, initializer)
+        invalidate_cc_index(model)
 
         if ring_radii is not None:
             _apply_ring_radii(comp, ring_radii)
@@ -1534,6 +1536,7 @@ def register(mcp):
         model = session.get_model(model_id)
         comp_type, comp = find_component(model, component_number)
         model.delete_component(comp)
+        invalidate_cc_index(model)
         session.autosave(model_id)
         return {
             "status": "deleted",

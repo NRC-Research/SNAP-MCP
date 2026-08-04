@@ -10,6 +10,8 @@ Each entry documents:
 """
 from __future__ import annotations
 
+import weakref
+
 COMPONENT_MAP: dict[str, dict] = {
     "PIPE": {
         "create": "create_pipe",
@@ -254,25 +256,82 @@ def create_component(model, comp_type: str, comp_num: int,
     return comp
 
 
+#: Per-model {cc_number: (comp_type, component)} cache for find_component.
+#: Keyed weakly so a closed model's index is collected with it.
+_cc_index: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
+
+
+def invalidate_cc_index(model) -> None:
+    """Drop the cached CC index for a model.
+
+    Must be called by anything that adds, removes, or renumbers a component.
+    Cheap to call when no index exists.
+    """
+    try:
+        _cc_index.pop(model, None)
+    except TypeError:
+        # Model type does not support weak references; nothing was cached.
+        pass
+
+
+def _build_cc_index(model) -> dict:
+    """Map every CC number to (comp_type, component) in one pass.
+
+    Iterates in COMPONENT_MAP order and keeps the FIRST entry for a given CC
+    number, which preserves find_component's original resolution order: TRACE
+    numbers components per type, so the same CC can legitimately name both a
+    PIPE and a HEAT_STRUCTURE.
+    """
+    index: dict = {}
+    for comp_type, comp in iter_all_components(model):
+        try:
+            cc = int(comp.java_object.getCCnumber())
+        except Exception:
+            continue
+        index.setdefault(cc, (comp_type, comp))
+    return index
+
+
 def find_component(model, comp_num: int):
     """Search every category and return the first component with this CC number.
 
     Returns (comp_type_str, component) or raises ValueError.
+
+    Backed by a per-model index. The naive scan cost one py4j round-trip per
+    component *per lookup*, so a caller sweeping N components paid O(N^2)
+    round-trips -- enough to stall for tens of minutes on a plant-sized model.
+    The index makes that one O(N) build followed by O(1) lookups.
+
+    A cache hit is revalidated against the live object before being returned,
+    so a stale index degrades to a rebuild rather than silently handing back
+    the wrong component.
     """
-    for comp_type, cfg in COMPONENT_MAP.items():
-        list_method = cfg.get("list")
-        if not list_method:
-            continue
-        try:
-            comps = _coerce_list(getattr(model, list_method)())
-            for comp in comps:
-                try:
-                    if int(comp.java_object.getCCnumber()) == comp_num:
-                        return comp_type, comp
-                except Exception:
-                    pass
-        except Exception:
-            pass
+    try:
+        index = _cc_index[model]
+    except (KeyError, TypeError):
+        index = None
+
+    if index is not None:
+        hit = index.get(comp_num)
+        if hit is not None:
+            try:
+                if int(hit[1].java_object.getCCnumber()) == comp_num:
+                    return hit
+            except Exception:
+                pass
+        # Miss, or the cached object no longer matches: the model changed
+        # under us. Rebuild once and retry before giving up.
+        index = None
+
+    index = _build_cc_index(model)
+    try:
+        _cc_index[model] = index
+    except TypeError:
+        pass  # not weak-referenceable; fall through uncached
+
+    hit = index.get(comp_num)
+    if hit is not None:
+        return hit
     raise ValueError(f"No component with number {comp_num} found in model.")
 
 
