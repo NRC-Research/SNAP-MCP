@@ -140,3 +140,57 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# ---------------------------------------------------------------------------
+# Summary-first payload helpers
+#
+# A plant vessel has 792 cells per table; returning seven of them verbatim was
+# ~140 KB and exhausted a model's context window on its own. These helpers
+# summarize instead. The tests below guard the two ways a summary can lie:
+# hiding unset cells, and losing the distinction between 0 and "no value".
+# ---------------------------------------------------------------------------
+
+def test_payload_helpers():
+    from snap_trace.tools.component_tools import (
+        _round_sig, _per_level, _unset_cells,
+    )
+    fails = []
+
+    def ck(label, got, want):
+        ok = got == want
+        print(f"  {'PASS' if ok else 'FAIL'}  {label}: got {got!r}")
+        if not ok:
+            print(f"        want {want!r}")
+            fails.append(label)
+
+    print("\n-- _round_sig")
+    ck("6 sig digits", _round_sig(15026404.386100871), 15026400.0)
+    ck("zero stays 0.0", _round_sig(0), 0.0)
+    ck("sentinel passes through", _round_sig("unset"), "unset")
+    ck("None passes through", _round_sig(None), None)
+    ck("bool is not a number", _round_sig(True), True)
+    ck("negative", _round_sig(-0.70710678), -0.707107)
+
+    print("\n-- _per_level must not hide unset cells")
+    grid = [[1.0, 1.0], [2.5, "unset"], [3.0, 4.0], ["unset", "unset"]]
+    ck("uniform level", _per_level(grid)[0], "L1: 1")
+    ck("partial unset is reported", _per_level(grid)[1], "L2: 2.5 (1 unset)")
+    ck("range level", _per_level(grid)[2], "L3: 3..4")
+    ck("fully unset level", _per_level(grid)[3], "L4: all unset")
+
+    print("\n-- _unset_cells reports coordinates and the true total")
+    hits, total = _unset_cells(grid)
+    ck("coordinates are 1-based [level, planar]", hits, [[2, 2], [4, 1], [4, 2]])
+    ck("total counted", total, 3)
+
+    big = [["unset"] * 10 for _ in range(10)]
+    hits, total = _unset_cells(big, limit=20)
+    ck("capped at limit", len(hits), 20)
+    ck("true total still reported", total, 100)
+
+    print("\n-- zero must stay distinguishable from unset")
+    z = [[0.0, "unset"]]
+    ck("zero is a value, not unset", _per_level(z)[0], "L1: 0 (1 unset)")
+
+    return fails

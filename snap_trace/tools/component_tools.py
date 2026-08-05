@@ -407,6 +407,63 @@ def _read_vessel_grid(table):
     return nz, nc, grid
 
 
+def _round_sig(v, sig: int = 6):
+    """Round a number to `sig` significant digits, passing everything else through.
+
+    Full-precision floats dominate the size of any returned grid -- a value
+    like 15026404.386100871 costs several times what 1.50264e+07 does once
+    tokenized -- and the extra digits carry no engineering meaning here.
+    """
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return v
+    if v == 0:
+        return 0.0
+    try:
+        return float(f"%.{sig}g" % v)
+    except Exception:
+        return v
+
+
+def _unset_cells(grid, limit: int = 20):
+    """Coordinates of unset cells as (level, planar_index), 1-based.
+
+    This is the actionable part of an IC review: which cells were never
+    initialized. Capped, with the true count reported alongside.
+    """
+    hits = []
+    total = 0
+    for z, row in enumerate(grid, start=1):
+        for c, v in enumerate(row, start=1):
+            if v == "unset" or v is None:
+                total += 1
+                if len(hits) < limit:
+                    hits.append([z, c])
+    return hits, total
+
+
+def _per_level(grid):
+    """Compact per-level summary: uniform value, or min..max.
+
+    A level holding both numbers and unset cells reports the numeric range
+    *and* the unset count -- summarizing only the numbers would hide exactly
+    the problem this tool exists to surface.
+    """
+    out = []
+    for z, row in enumerate(grid, start=1):
+        nums = [v for v in row
+                if isinstance(v, (int, float)) and not isinstance(v, bool)]
+        n_unset = len(row) - len(nums)
+        if not nums:
+            out.append(f"L{z}: all unset")
+            continue
+        if all(v == nums[0] for v in nums):
+            body = f"{_round_sig(nums[0]):g}"
+        else:
+            body = f"{_round_sig(min(nums)):g}..{_round_sig(max(nums)):g}"
+        out.append(f"L{z}: {body}" + (f" ({n_unset} unset)" if n_unset else ""))
+    return out
+
+
 def _summarize_grid(grid):
     """One-line summary of a value grid: uniform / range / UNSET."""
     flat = [v for row in grid for v in row]
@@ -1363,37 +1420,58 @@ def register(mcp):
         model_id: str,
         vessel_cc: int,
         tables: list[str] = None,
+        detail: str = "summary",
     ) -> dict:
         """Return VESSEL per-cell IC tables and edge hydraulic-diameter tables.
 
         Read-side counterpart to set_vessel_table(). Use this to review whether
-        a vessel's initial conditions and edge HDs were set — unset cells report
-        as 'unset' (the source of "Unknown" IC errors in model check).
+        a vessel's initial conditions and edge HDs were set — unset cells are
+        the source of "Unknown" IC errors in model check, and are reported here
+        by coordinate.
+
+        **Returns a summary by default, not the raw grid.** A 33 x 24 vessel has
+        792 cells per table; returning seven of those verbatim is ~140 KB of
+        full-precision floats, which is large enough to exhaust a model's
+        context window on its own. The summary answers the usual questions —
+        is it uniform, what is the range, which cells are unset — in a few
+        hundred bytes. Ask for `detail="full"` only when the individual values
+        are genuinely needed.
+
+        COST: each table is materialized from SNAP one row at a time over py4j,
+        so a large vessel is expensive — roughly 40 s per table for a 33 x 24
+        vessel, i.e. ~5 minutes for the default set of seven. Pass `tables` to
+        read only what you need. Vessel size (levels x rings x sectors) drives
+        this directly, so small vessels return promptly.
 
         Parameters
         ----------
         model_id : str
         vessel_cc : int
             CC number of the VESSEL.
-        COST: each table is materialized from SNAP one row at a time over
-        py4j, so a large vessel is expensive -- roughly 40 s per table for a
-        33 x 24 vessel, i.e. ~5 minutes for the default set of seven. Pass
-        `tables` to read only what you need; a single named table is ~40 s.
-        Vessel size drives this directly (levels x rings x sectors), so small
-        vessels return promptly.
-
         tables : list[str] | None
             Which tables to read. Default reviews the standard set:
             ["p", "tl", "tv", "alp", "hd_axial", "hd_azimuthal", "hd_radial"].
             Any valid set_vessel_table() name is accepted.
+        detail : str
+            "summary" (default) — per-table summary, per-level ranges, and the
+            coordinates of any unset cells.
+            "full" — additionally include the complete grid, rounded to 6
+            significant digits.
 
         Returns
         -------
         dict with:
           geometry : levels (nasx), rings (nrsx), sectors (ntsx), sector_angle_deg
-          tables   : {name: {nz, ncols, summary, grid}}  where grid is nz rows ×
-                     ncols planar cells (ncols = rings × sectors). 'summary' flags
-                     uniform / range / UNSET at a glance.
+          tables   : {name: {nz, ncols, summary, per_level, ...}}
+                     summary     — uniform / range / UNSET at a glance
+                     per_level   — one entry per axial level, "L3: 1.5e+07" or
+                                   "L3: 1.4e+07..1.6e+07"
+                     unset_count, unset_cells — present only when cells are
+                                   unset; coordinates are [level, planar_index],
+                                   1-based, capped with a note giving the true
+                                   total
+                     grid        — only when detail="full"; nz rows x ncols
+                                   planar cells (ncols = rings x sectors)
         """
         model = session.get_model(model_id)
         comp_type, vessel = find_component(model, vessel_cc)
@@ -1402,17 +1480,30 @@ def register(mcp):
 
         names = tables or ["p", "tl", "tv", "alp",
                            "hd_axial", "hd_azimuthal", "hd_radial"]
+        want_grid = str(detail).lower() == "full"
         out = {}
         for name in names:
             try:
                 table = _get_vessel_table(vessel, name)
                 nz, nc, grid = _read_vessel_grid(table)
-                out[name] = {
+                unset, n_unset = _unset_cells(grid)
+                entry = {
                     "nz": nz,
                     "ncols": nc,
                     "summary": _summarize_grid(grid),
-                    "grid": grid,
+                    "per_level": _per_level(grid),
                 }
+                if n_unset:
+                    entry["unset_count"] = n_unset
+                    entry["unset_cells"] = unset
+                    if n_unset > len(unset):
+                        entry["unset_note"] = (
+                            f"showing first {len(unset)} of {n_unset} "
+                            f"as [level, planar_index], 1-based"
+                        )
+                if want_grid:
+                    entry["grid"] = [[_round_sig(v) for v in row] for row in grid]
+                out[name] = entry
             except Exception as exc:
                 out[name] = {"error": str(exc)}
 
@@ -1646,17 +1737,65 @@ def register(mcp):
         }
 
     @mcp.tool()
-    def list_components(model_id: str) -> list[dict]:
-        """List all components in the model with type, number, and name."""
+    def list_components(
+        model_id: str,
+        component_type: str = None,
+        detail: str = "compact",
+    ) -> dict:
+        """List the model's components, grouped by type.
+
+        A plant model can hold hundreds of components — 819 in one PWR deck —
+        and the verbose per-component form costs ~115 bytes each, or ~95 KB for
+        the model. That is enough to crowd out the rest of a context window
+        before any real inspection has happened, so the default is compact.
+
+        Parameters
+        ----------
+        model_id : str
+        component_type : str | None
+            Restrict to one type, e.g. "VESSEL" or "PIPE". Case-insensitive.
+            Use this whenever you already know what you are looking for.
+        detail : str
+            "compact" (default) — one "number name" string per component,
+            grouped under its type, plus a count per type.
+            "full" — the original list of {component_type, component_number,
+            name} dicts.
+
+        Returns
+        -------
+        dict with:
+          counts     : {type: n} for every type present
+          total      : total component count (before any filter)
+          components : compact  -> {type: ["110 Cold Leg 1A", ...]}
+                       full     -> [{component_type, component_number, name}, ...]
+        """
         model = session.get_model(model_id)
-        result = []
-        for comp_type, comp in iter_all_components(model):
-            result.append({
-                "component_type": comp_type,
-                "component_number": _cc(comp),
-                "name": _name(comp),
-            })
-        return sorted(result, key=lambda x: (x["component_type"], x["component_number"]))
+        want = component_type.upper().strip() if component_type else None
+
+        counts: dict = {}
+        rows = []
+        for ctype, comp in iter_all_components(model):
+            counts[ctype] = counts.get(ctype, 0) + 1
+            if want and ctype != want:
+                continue
+            rows.append((ctype, _cc(comp), _name(comp)))
+
+        total = sum(counts.values())
+        rows.sort(key=lambda r: (r[0], r[1] if isinstance(r[1], int) else 0))
+
+        if str(detail).lower() == "full":
+            comps = [{"component_type": t, "component_number": n, "name": nm}
+                     for t, n, nm in rows]
+        else:
+            comps = {}
+            for t, n, nm in rows:
+                comps.setdefault(t, []).append(f"{n} {nm}".rstrip())
+
+        result = {"counts": counts, "total": total, "components": comps}
+        if want and want not in counts:
+            result["note"] = (f"no components of type '{want}'; "
+                              f"present types: {sorted(counts)}")
+        return result
 
     @mcp.tool()
     def get_component(model_id: str, component_number: int) -> dict:
