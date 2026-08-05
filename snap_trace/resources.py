@@ -539,7 +539,12 @@ validate_model; only export_trcin when preparing to run a TRACE calculation.
     # NEVER ask the user to import a .inp file for review purposes.
 
 ## 10. Export TRCIN  ← only if running TRACE
-    content = export_trcin(model_id, "/path/to/output.inp")
+    result = export_trcin(model_id, "/path/to/output.inp")
+    # Returns {path, bytes, lines} — NOT the deck contents. A plant model is
+    # well over a megabyte; returning it inline exhausts the context window.
+    # To inspect the deck, search it instead of dumping it:
+    #     export_trcin(model_id, pattern="grav")     → matching lines + numbers
+    #     export_trcin(model_id, pattern="^sepd")    → the separator cards
     # Only needed to actually run a TRACE calculation.
     # .inp format is tied to the TRACE version the SNAP plugin targets;
     # set SNAP_TRACE_TARGET_VERSION to match the installed TRACE binary.

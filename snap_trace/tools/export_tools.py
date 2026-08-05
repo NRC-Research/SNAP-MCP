@@ -568,32 +568,61 @@ def _read_result_set(result_set, errors: list, warnings: list) -> None:
 def register(mcp):
 
     @mcp.tool()
-    def export_trcin(model_id: str, output_path: str | None = None) -> str:
+    def export_trcin(
+        model_id: str,
+        output_path: str | None = None,
+        pattern: str | None = None,
+        max_lines: int = 200,
+        include_content: bool = False,
+    ) -> dict:
         """Export the model as a TRACE input deck (.inp file).
 
         Uses SNAP's native TRCIN exporter (model.export()), which produces the
         same output as File → Export TRCIN in the SNAP GUI.
 
+        **Returns a path and, on request, matching lines — not the whole deck.**
+        A plant model exports to well over a megabyte; returning that inline is
+        roughly 840,000 tokens and will exhaust any context window. The file is
+        written and kept, so it can be read or grepped afterwards by whatever
+        means suits.
+
+        To inspect the deck, pass `pattern`: it returns matching lines with
+        their line numbers, which is what deck inspection almost always wants.
+        For example `pattern="grav"` to see every gravity card, or
+        `pattern="^sepd"` for the separators.
+
         Parameters
         ----------
         model_id : str
         output_path : str | None
-            If provided, write to that file path. The TRCIN content is also
-            returned as a string in both cases.
+            Where to write the deck. A temp file is used if omitted; either
+            way the file is kept and its path returned.
+        pattern : str | None
+            Regular expression. When given, matching lines are returned as
+            "<line number>: <text>", capped at `max_lines`.
+        max_lines : int
+            Cap on returned matches (default 200). The true match count is
+            always reported.
+        include_content : bool
+            Return the entire deck inline. Refused above ~200 KB — use
+            `pattern` or read the file at `path` instead.
 
         Returns
         -------
-        str — the full TRCIN file content.
+        dict with:
+          path        — the written .inp file
+          bytes, lines — size of the deck
+          match_count, matches — present when `pattern` was given
+          content     — only when include_content=True and the deck is small
         """
         model = session.get_model(model_id)
 
-        # Use a temp file if no output path given
+        # Use a temp file if no output path given. The file is kept either
+        # way: the caller needs somewhere to read the deck from, since it is
+        # far too large to return inline.
         if output_path is None:
             fd, output_path = tempfile.mkstemp(suffix=".inp", prefix="trace_")
             os.close(fd)
-            cleanup = True
-        else:
-            cleanup = False
 
         try:
             export_set = model.export(output_path)
@@ -617,16 +646,48 @@ def register(mcp):
             with open(written_path, "r", errors="replace") as f:
                 content = f.read()
             content = _fixup_trcin(content)
-        except OSError:
-            content = f"(exported to {written_path})"
-
-        if cleanup:
+            # Persist the fixed-up deck so the file matches what we report.
             try:
-                os.unlink(written_path)
+                with open(written_path, "w") as f:
+                    f.write(content)
             except OSError:
                 pass
+        except OSError as exc:
+            return {"path": written_path, "error": f"could not read deck: {exc}"}
 
-        return content
+        lines = content.splitlines()
+        result: dict = {
+            "path": written_path,
+            "bytes": len(content),
+            "lines": len(lines),
+        }
+
+        if pattern:
+            try:
+                rx = re.compile(pattern, re.IGNORECASE)
+            except re.error as exc:
+                result["error"] = f"bad pattern: {exc}"
+                return result
+            hits = [f"{i}: {ln}" for i, ln in enumerate(lines, 1) if rx.search(ln)]
+            result["match_count"] = len(hits)
+            result["matches"] = hits[:max_lines]
+            if len(hits) > max_lines:
+                result["matches_note"] = (
+                    f"showing first {max_lines} of {len(hits)} matches; "
+                    f"raise max_lines or narrow the pattern"
+                )
+
+        if include_content:
+            limit = 200_000
+            if len(content) <= limit:
+                result["content"] = content
+            else:
+                result["content_omitted"] = (
+                    f"deck is {len(content)} bytes, over the {limit} inline limit — "
+                    f"use pattern= to search it, or read {written_path}"
+                )
+
+        return result
 
     @mcp.tool()
     def export_check_report(
