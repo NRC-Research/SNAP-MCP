@@ -29,12 +29,33 @@ _FILL_SV_DATA_5 = re.compile(
 )
 
 
-def _fixup_trcin(content: str) -> str:
+def _fixup_trcin(content: str, integer_fix: bool = False) -> str:
+    """Apply version-specific corrections to an exported TRCIN deck.
+
+    `integer_fix` defaults to **off**, and should stay off unless you have
+    measured that your TRACE target needs it.
+
+    The intent was sound: integer fields stored as Java doubles export as
+    "0.0"/"1.0", and the TRACE ASCII parser rejects floats in integer-only
+    fields. The implementation is not -- r'\\b(\\d+)\\.0\\b' matches anywhere in
+    the file, with no notion of which field it is in.
+
+    Measured on a plant deck (~31,000 lines) against TRACE V5.1831.1:
+    enabling it rewrote **16,238 lines**, including
+
+        chm12=1.0,                     ->  chm12=1,        (namelist real)
+        dstep 0   timet 0.0            ->  0   0           (timet is a real)
+        *m: PLUGIN:TRACE Version 4.7.0 ->  Version 4.7     (a comment)
+
+    and TRACE then rejected the deck outright ("real data encountered in
+    integer field"), while accepting the untouched SNAP export. Left in place
+    because an older target may genuinely need it, but it must be requested
+    deliberately and verified against a real run.
+    """
     tv = target_version()
 
-    # Always: integer fields stored as Java doubles export as "0.0", "1.0",
-    # etc.  The TRACE ASCII parser rejects floats in integer-only fields.
-    content = re.sub(r'\b(\d+)\.0\b', r'\1', content)
+    if integer_fix:
+        content = re.sub(r'\b(\d+)\.0\b', r'\1', content)
 
     # TRACE ≤ 5.0p9: collapse 5-field FILL SV card to 4-field.
     if tv <= (5, 0, 9):
@@ -1002,3 +1023,154 @@ def register(mcp):
         errors = [_enrich_error(e) for e in errors]
         valid = len(errors) == 0
         return {"valid": valid, "errors": errors, "warnings": warnings}
+
+    @mcp.tool()
+    def run_trace(
+        model_id: str,
+        timeout_s: int = 300,
+        sif: str | None = None,
+        work_dir: str | None = None,
+    ) -> dict:
+        """Export the model and run it through TRACE, reporting input errors.
+
+        This answers the question a model check cannot: **does TRACE actually
+        accept this deck?** SNAP's own validation catches structural problems,
+        but TRACE applies its own input checks — junction gravity consistency,
+        accumulator orientation, flow-area ratios — and rejects decks that
+        SNAP considers fine.
+
+        The deck is exported, written as `tracin`, and run in the TRACE
+        container. The run is stopped at `timeout_s`; that is normal and not a
+        failure. TRACE performs its input checking up front, so a run that is
+        still going when the timeout hits has **passed** input checking and
+        moved on to the calculation — which is exactly what we want to know.
+
+        Returns a summary, never the raw output files, which run to megabytes.
+
+        Parameters
+        ----------
+        model_id : str
+        timeout_s : int
+            Wall-clock cap on the TRACE run (default 300). Raise it only if you
+            want the calculation to progress further; input errors surface in
+            the first seconds regardless.
+        sif : str | None
+            Path to the TRACE Apptainer/Singularity image. Defaults to the
+            TRACE_SIF environment variable.
+        work_dir : str | None
+            Directory to run in. A temp directory is used if omitted; either
+            way the path is returned so the outputs can be inspected.
+
+        Returns
+        -------
+        dict with:
+          input_accepted  — True if TRACE found no input errors
+          verdict         — one-line plain statement of the outcome
+          input_errors    — count of "## Input Error ##" blocks
+          fatal_junctions — count of fatal junction errors
+          routines        — which TRACE check routines objected, with counts
+          messages        — up to 20 distinct error lines, deduplicated
+          timed_out       — True if stopped at the cap (expected on a good deck)
+          work_dir, deck  — where the run happened, for follow-up
+        """
+        import subprocess
+
+        sif_path = sif or os.environ.get("TRACE_SIF", "")
+        if not sif_path:
+            return {"error": "no TRACE image given; pass sif= or set TRACE_SIF"}
+        if not os.path.exists(sif_path):
+            return {"error": f"TRACE image not found: {sif_path}"}
+
+        runner = None
+        for cand in ("apptainer", "singularity"):
+            try:
+                subprocess.run([cand, "--version"], capture_output=True, timeout=15)
+                runner = cand
+                break
+            except Exception:
+                continue
+        if runner is None:
+            return {"error": "neither apptainer nor singularity is available"}
+
+        if work_dir is None:
+            work_dir = tempfile.mkdtemp(prefix="trace_run_")
+        os.makedirs(work_dir, exist_ok=True)
+
+        deck = os.path.join(work_dir, "tracin")
+        model = session.get_model(model_id)
+        try:
+            model.export(deck)
+        except Exception:
+            pass  # SNAP writes the file before the Py4J iterator error
+        if not os.path.exists(deck):
+            return {"error": f"export produced no deck at {deck}"}
+        # No fixups are applied here: the raw SNAP export is what TRACE was
+        # measured to accept on this target. The integer fixup is off by
+        # default (see _fixup_trcin), and the FILL SV fixup is gated on
+        # tv <= 5.0p9 -- which our default target satisfies, so calling
+        # _fixup_trcin() at all would still rewrite the deck. If a future
+        # target needs either, turn it on here and re-run this tool to
+        # confirm TRACE still accepts the result.
+
+        timed_out = False
+        try:
+            subprocess.run(
+                [runner, "run", "--containall",
+                 "--bind", f"{work_dir}:/work", "--pwd", "/work", sif_path],
+                cwd=work_dir, capture_output=True, timeout=timeout_s,
+            )
+        except subprocess.TimeoutExpired:
+            timed_out = True
+        except Exception as exc:
+            return {"error": f"{type(exc).__name__}: {exc}", "work_dir": work_dir}
+
+        msg_path = os.path.join(work_dir, "trcmsg")
+        if not os.path.exists(msg_path):
+            return {
+                "error": "TRACE produced no trcmsg — it may not have started",
+                "work_dir": work_dir, "deck": deck, "timed_out": timed_out,
+            }
+
+        with open(msg_path, errors="replace") as f:
+            msg = f.read()
+
+        n_blocks = msg.count("## Input Error ##")
+        n_fatal = len(re.findall(r"Fatal input error", msg))
+        routines = {}
+        for m in re.finditer(r"generated by routine (\w+)", msg):
+            routines[m.group(1)] = routines.get(m.group(1), 0) + 1
+
+        seen, messages = set(), []
+        for line in msg.splitlines():
+            s = line.strip()
+            if not s:
+                continue
+            if ("Fatal input error" in s or s.startswith("Type ")
+                    or "must have" in s or "inconsistent" in s):
+                if s not in seen:
+                    seen.add(s)
+                    messages.append(s)
+
+        accepted = n_blocks == 0
+        if accepted and timed_out:
+            verdict = (f"input accepted — TRACE passed its checks and was still "
+                       f"calculating at the {timeout_s}s cap")
+        elif accepted:
+            verdict = "input accepted — TRACE ran to completion within the cap"
+        else:
+            verdict = (f"input REJECTED — {n_blocks} input-error block(s), "
+                       f"{n_fatal} fatal error(s)")
+
+        return {
+            "input_accepted": accepted,
+            "verdict": verdict,
+            "input_errors": n_blocks,
+            "fatal_junctions": n_fatal,
+            "routines": routines,
+            "messages": messages[:20],
+            "message_note": (f"{len(messages)} distinct error lines; showing 20"
+                             if len(messages) > 20 else None),
+            "timed_out": timed_out,
+            "work_dir": work_dir,
+            "deck": deck,
+        }

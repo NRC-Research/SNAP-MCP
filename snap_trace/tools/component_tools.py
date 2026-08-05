@@ -407,6 +407,50 @@ def _read_vessel_grid(table):
     return nz, nc, grid
 
 
+def _vessel_junction_components(model) -> dict:
+    """Map CC number -> VesselJunctionComponent for every vessel-to-vessel link.
+
+    These components are not in COMPONENT_MAP and are absent from
+    model.pipes(), so neither find_component() nor iter_all_components()
+    finds them. The only route is via each vessel's V2V connections:
+
+        vessel.getV2VConnections() -> V2VJunConnection
+                                   -> getLeftComponent()/getRightComponent()
+                                   -> VesselJunctionComponent (owns the edges)
+
+    A junction component is reachable from both vessels it links, so results
+    are de-duplicated by CC number.
+    """
+    found: dict = {}
+    for ctype, comp in iter_all_components(model):
+        if ctype != "VESSEL":
+            continue
+        try:
+            cons = comp.java_object.getV2VConnections()
+            n = cons.size()
+        except Exception:
+            continue
+        for i in range(n):
+            try:
+                jc = cons.get(i)
+            except Exception:
+                continue
+            for side in ("getLeftComponent", "getRightComponent"):
+                try:
+                    sub = getattr(jc, side)()
+                except Exception:
+                    continue
+                if sub is None:
+                    continue
+                try:
+                    if "VesselJunctionComponent" not in sub.getClass().getName():
+                        continue
+                    found[int(sub.getCCnumber())] = sub
+                except Exception:
+                    continue
+    return found
+
+
 def _round_sig(v, sig: int = 6):
     """Round a number to `sig` significant digits, passing everything else through.
 
@@ -1835,3 +1879,166 @@ def register(mcp):
             if mesh_info:
                 result["radial_mesh"] = mesh_info
         return result
+
+    @mcp.tool()
+    def get_vessel_junctions(model_id: str) -> dict:
+        """List vessel-to-vessel junctions and their gravity terms.
+
+        Vessel-to-vessel junctions are not reachable by CC number. In the
+        exported deck they appear as ordinary PIPE components (10001, 10002,
+        …), but those numbers do not exist in the model: the junctions are
+        edges owned by a VesselJunctionComponent, which find_component() and
+        model.pipes() do not see. Addressing them by deck number fails with
+        "No component with number 10001 found in model".
+
+        This tool reaches them the only way that works — walking each vessel's
+        V2V connections to the junction components that own the edges.
+
+        GRAV is derived, not stored: grav = sin(edgeAngle). A junction reading
+        exactly 0.0 on an axial (vertical) connection is the signature of
+        SNAP-issues#130, where the elevations are computed and then discarded.
+
+        Returns
+        -------
+        dict with:
+          junction_components : [{cc, edge_count, grav_values, all_zero}]
+          total_edges         : across all junction components
+          zero_grav_edges     : how many read 0.0
+          note                : present when zeros are found
+        """
+        model = session.get_model(model_id)
+        comps = _vessel_junction_components(model)
+
+        out, total, zeros = [], 0, 0
+        for cc in sorted(comps):
+            comp = comps[cc]
+            vals = []
+            try:
+                for k in range(comp.getEdgeCount()):
+                    try:
+                        vals.append(_round_sig(float(comp.getEdgeAt(k).getGrav())))
+                    except Exception:
+                        vals.append(None)
+            except Exception:
+                pass
+            total += len(vals)
+            nz = sum(1 for v in vals if v == 0.0)
+            zeros += nz
+            out.append({
+                "cc": cc,
+                "edge_count": len(vals),
+                "grav_values": sorted(set(v for v in vals if v is not None)),
+                "all_zero": bool(vals) and nz == len(vals),
+            })
+
+        result = {
+            "junction_components": out,
+            "total_edges": total,
+            "zero_grav_edges": zeros,
+        }
+        if zeros:
+            result["note"] = (
+                f"{zeros} of {total} junction edges have GRAV = 0. On an axial "
+                f"(vertical) vessel-to-vessel connection that is wrong and TRACE "
+                f"will reject the deck; see SNAP-issues#130. Use "
+                f"set_vessel_junction_grav() to correct them, and confirm the "
+                f"required value from TRACE's own error text rather than guessing."
+            )
+        return result
+
+    @mcp.tool()
+    def set_vessel_junction_grav(
+        model_id: str,
+        value: float,
+        junction_cc: int = None,
+        only_if_zero: bool = True,
+    ) -> dict:
+        """Set the GRAV term on vessel-to-vessel junction edges.
+
+        The companion to get_vessel_junctions(), and the only way to write
+        these values — they cannot be reached with set_pipe_edge_property()
+        because the deck-level numbers (10001…) do not exist in the model.
+
+        GRAV is stored as edgeAngle; setGrav(g) writes asin(g), so |value| must
+        be <= 1. For an axial vessel-to-vessel junction the physically
+        meaningful values are +1 or -1 (vertical); 0 means horizontal and is
+        what the SNAP defect leaves behind.
+
+        **Get the required value from TRACE, not from reasoning about flow
+        direction.** Running the deck produces messages of the form
+        "GRAV of 1D component face = 0.0  GRAV of vessel face = 1.0" — that
+        second number is the answer, per junction.
+
+        Parameters
+        ----------
+        model_id : str
+        value : float
+            GRAV to write, -1.0 .. 1.0.
+        junction_cc : int | None
+            Restrict to one junction component (as reported by
+            get_vessel_junctions). Default: all of them.
+        only_if_zero : bool
+            Only overwrite edges currently reading 0.0 (default). Set False to
+            overwrite regardless — which will also clobber values a user set
+            deliberately.
+
+        Returns
+        -------
+        dict with changed/skipped counts, per-component detail, and the
+        verified values read back after writing.
+        """
+        try:
+            v = float(value)
+        except Exception:
+            return {"error": f"value must be numeric, got {value!r}"}
+        if not -1.0 <= v <= 1.0:
+            return {"error": f"GRAV must be between -1 and 1 (got {v}); "
+                             f"it is sin(angle)"}
+
+        model = session.get_model(model_id)
+        comps = _vessel_junction_components(model)
+        if junction_cc is not None:
+            comps = {k: c for k, c in comps.items() if k == junction_cc}
+            if not comps:
+                return {"error": f"no vessel junction component {junction_cc}; "
+                                 f"call get_vessel_junctions() to list them"}
+
+        changed, skipped, detail = 0, 0, []
+        for cc in sorted(comps):
+            comp = comps[cc]
+            n_ch = n_sk = 0
+            for k in range(comp.getEdgeCount()):
+                e = comp.getEdgeAt(k)
+                try:
+                    cur = float(e.getGrav())
+                except Exception:
+                    cur = None
+                if only_if_zero and cur is not None and abs(cur) > 1e-9:
+                    n_sk += 1
+                    continue
+                try:
+                    e.setGrav(v)
+                    n_ch += 1
+                except Exception:
+                    n_sk += 1
+            changed += n_ch
+            skipped += n_sk
+            # Read back rather than trusting the writes.
+            after = set()
+            for k in range(comp.getEdgeCount()):
+                try:
+                    after.add(_round_sig(float(comp.getEdgeAt(k).getGrav())))
+                except Exception:
+                    pass
+            detail.append({"cc": cc, "changed": n_ch, "skipped": n_sk,
+                           "values_now": sorted(after)})
+
+        session.autosave(model_id)
+        return {
+            "changed_edges": changed,
+            "skipped_edges": skipped,
+            "value": v,
+            "components": detail,
+            "note": ("values_now is read back from the model after writing, "
+                     "not the value requested"),
+        }
