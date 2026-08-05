@@ -217,11 +217,20 @@ def _python_model_check(model) -> list[str]:
                 elif n_rows < 0:
                     pass  # table size indeterminate — skip check
                 else:
-                    for i in range(n_rows):
+                    # Materialize each table ONCE. Indexing a
+                    # Hydro3DPropertyTable rebuilds the entire table per
+                    # access, so `for i in range(n): tbl[i]` costs O(rows^2)
+                    # gateway crossings -- 33 rows x 3 tables was ~35 minutes
+                    # on a plant vessel and made validate_model time out.
+                    rows_p = _materialize_table(p_table)
+                    rows_tl = _materialize_table(tl_table)
+                    rows_tv = _materialize_table(tv_table)
+                    usable = min(n_rows, len(rows_p), len(rows_tl), len(rows_tv))
+                    for i in range(usable):
                         try:
-                            row_p = p_table[i]
-                            row_tl = tl_table[i]
-                            row_tv = tv_table[i]
+                            row_p = rows_p[i]
+                            row_tl = rows_tl[i]
+                            row_tv = rows_tv[i]
                             for j, (pv, tlv, tvv) in enumerate(zip(row_p, row_tl, row_tv)):
                                 p  = _to_float(pv)  or 0.0
                                 tl = _to_float(tlv) or 0.0
@@ -447,6 +456,24 @@ def _iter_all_for_check(model):
                 yield comp_type, comp
         except Exception:
             pass
+
+
+def _materialize_table(tbl) -> list:
+    """Snapshot a SNAP property table as a list of rows, building it once.
+
+    Indexing a Hydro3DPropertyTable rebuilds the *entire* table on every
+    access (`__getitem__` returns `self._values()[item]`), so a loop of the
+    form `for i in range(n): tbl[i]` costs O(rows^2) gateway crossings.
+    Iterating goes through `__iter__`, which builds `_values()` a single
+    time. See PY4J_TABLE_PERFORMANCE.md in the SNAP-TRACE-Plugin repo.
+
+    Returns [] if the table cannot be read, so callers degrade to skipping
+    the check rather than raising.
+    """
+    try:
+        return list(tbl)
+    except Exception:
+        return []
 
 
 def _get_table_len(tbl) -> int:
