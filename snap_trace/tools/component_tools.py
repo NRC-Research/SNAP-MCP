@@ -258,6 +258,88 @@ def _attr_num(obj, name):
         return None
 
 
+_SCALARS = (bool, int, float, str, type(None))
+
+
+def _probe(obj, name):
+    """Fetch obj.name, reporting whether it worked.
+
+    Not hasattr(): hasattr only swallows AttributeError, so a property that
+    raises anything else propagates out. SNAP wrappers do raise on some
+    attributes, and a summary call must not die because one property is
+    unhappy.
+
+    Returns (value, ok).
+    """
+    try:
+        return getattr(obj, name), True
+    except Exception:
+        return None, False
+
+
+def _render_prop(val, max_len: int = 400):
+    """Render a property value for display without materializing bulk data.
+
+    get_component() summarizes a component by walking every public attribute.
+    Calling str() indiscriminately is fine on a PIPE but pathological on a
+    VESSEL: the 3-D property tables and per-cell collections expand to
+    thousands of py4j round-trips, turning a metadata read into a call that
+    does not return on a plant-sized model.
+
+    The rule here: expand scalars and small scalar-like wrappers (Length,
+    Angle, CReal and friends, whose str() is one cheap call); describe
+    anything sized or table-like instead of expanding it. Content stays
+    available through the dedicated tools -- get_vessel_tables(),
+    get_pipe_cells(), get_pipe_edges().
+
+    Never call len() on a table-like value: Hydro3DPropertyTable.__len__
+    builds the whole table. row_count/column_count are single cheap calls.
+    """
+    if isinstance(val, _SCALARS):
+        if isinstance(val, str) and len(val) > max_len:
+            return val[:max_len] + f"... [truncated, {len(val)} chars]"
+        return val
+
+    tname = type(val).__name__
+
+    # Table-like: report shape, never contents. Detected by probing rather
+    # than hasattr, and by attribute presence on the type so a raising
+    # property still classifies correctly.
+    is_table = "row_count" in dir(type(val)) or "row_count" in dir(val)
+    if is_table:
+        raw_rows, ok_rows = _probe(val, "row_count")
+        try:
+            nr = int(raw_rows) if ok_rows else "?"
+        except Exception:
+            nr = "?"
+        raw_cols, ok_cols = _probe(val, "column_count")
+        nc = ""
+        if ok_cols:
+            try:
+                nc = f"x{int(raw_cols)}"
+            except Exception:
+                nc = ""
+        return (f"<{tname} {nr}{nc} — not expanded; "
+                f"use get_vessel_tables()/get_pipe_cells()>")
+
+    # Sized collections: report length, never contents. len() is safe here
+    # because the table-like case was already returned above.
+    if hasattr(val, "__len__") and not isinstance(val, str):
+        try:
+            return f"<{tname} of {len(val)} items — not expanded>"
+        except Exception:
+            return f"<{tname} — not expanded>"
+
+    # Scalar-like SNAP wrapper (Length, Angle, CReal, enums): str() is cheap.
+    try:
+        s = str(val)
+    except Exception as exc:
+        return f"<{tname} — str() raised {type(exc).__name__}>"
+    if len(s) > max_len:
+        return s[:max_len] + f"... [truncated, {len(s)} chars]"
+    return s
+
+
 def _deg(angle_rad):
     """Convert an edge inclination from radians to degrees.
 
@@ -1583,6 +1665,13 @@ def register(mcp):
         Use this to inspect what has been set on a component before export.
         For HEAT_STRUCTURE components a 'radial_mesh' key is also returned,
         containing per-layer material names, thicknesses, and mesh point counts.
+
+        This is a **metadata** call and stays cheap on every component type.
+        Bulk data -- 3-D property tables, per-cell and per-edge collections --
+        is described (type and shape) rather than expanded, because expanding
+        it on a plant-sized VESSEL costs thousands of py4j round-trips. Read
+        the contents with the dedicated tools instead:
+        get_vessel_tables(), get_pipe_cells(), get_pipe_edges().
         """
         model = session.get_model(model_id)
         comp_type, comp = find_component(model, component_number)
@@ -1594,7 +1683,7 @@ def register(mcp):
                 val = getattr(comp, attr)
                 if callable(val):
                     continue
-                props[attr] = str(val)
+                props[attr] = _render_prop(val)
             except Exception:
                 pass
         result = {
