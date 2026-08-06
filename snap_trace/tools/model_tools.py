@@ -9,6 +9,33 @@ import snap_trace.session as session
 _DEFAULT_VERSION = snap_env.SNAP_TRACE_TARGET_VERSION
 
 
+def _resolve_path(tool: str, canonical: str, primary: str, alias: str) -> str:
+    """Return the file path from either the canonical parameter or 'path'.
+
+    Callers reliably guess 'path' for a tool whose parameter is actually
+    'med_file_path' or 'trcin_path'. Without an alias that guess surfaces as a
+    schema validation error naming a field the caller did not use, which reads
+    as "the tool is broken" rather than "rename the argument" — and an agent
+    that cannot see the fix simply retries the same call.
+
+    Raises on neither-given and on both-given-and-different, so a genuine
+    mistake is still reported rather than silently resolved.
+    """
+    primary, alias = (primary or "").strip(), (alias or "").strip()
+    if primary and alias and primary != alias:
+        raise ValueError(
+            f"{tool}: '{canonical}' and 'path' were both given but differ "
+            f"({primary!r} vs {alias!r}). Pass only one."
+        )
+    resolved = primary or alias
+    if not resolved:
+        raise ValueError(
+            f"{tool}: a file path is required — pass '{canonical}' "
+            f"(or its alias 'path')."
+        )
+    return resolved
+
+
 def _namelist_value(prop):
     """Unwrap a namelist property to a JSON-safe value.
 
@@ -157,7 +184,8 @@ def register(mcp):
         return session.list_models()
 
     @mcp.tool()
-    def open_med_model(med_file_path: str, name: str = "") -> dict:
+    def open_med_model(med_file_path: str = "", name: str = "",
+                       path: str = "") -> dict:
         """Open an existing SNAP .med model file.
 
         Parameters
@@ -166,11 +194,15 @@ def register(mcp):
             Absolute path to the .med file.
         name : str
             Optional display name (defaults to the file stem).
+        path : str
+            Accepted alias for med_file_path. Give one or the other.
 
         Returns
         -------
         dict with model_id and component_count.
         """
+        med_file_path = _resolve_path("open_med_model", "med_file_path",
+                                      med_file_path, path)
         snap_env.wait_ready()
         import snap.codes.trace as trace
         model = trace.open_model(med_file_path)
@@ -181,8 +213,8 @@ def register(mcp):
         return {"model_id": model_id, "name": display, "component_count": count}
 
     @mcp.tool()
-    def import_trcin(trcin_path: str, name: str = "",
-                     version: str | None = None) -> dict:
+    def import_trcin(trcin_path: str = "", name: str = "",
+                     version: str | None = None, path: str = "") -> dict:
         """Import an existing TRACE ASCII input deck (.inp / .trcin).
 
         Parameters
@@ -193,11 +225,15 @@ def register(mcp):
             Optional display name.
         version : str | None
             Target TRACE version, or None for auto-detect.
+        path : str
+            Accepted alias for trcin_path. Give one or the other.
 
         Returns
         -------
         dict with model_id and component_count.
         """
+        trcin_path = _resolve_path("import_trcin", "trcin_path",
+                                   trcin_path, path)
         snap_env.wait_ready()
         import snap.codes.trace as trace
         model = trace.import_ascii(trcin_path, version)
