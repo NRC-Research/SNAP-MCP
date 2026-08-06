@@ -1463,7 +1463,7 @@ def register(mcp):
     def get_vessel_tables(
         model_id: str,
         vessel_cc: int,
-        tables: list[str] = None,
+        tables: list[str] | None = None,
         detail: str = "summary",
     ) -> dict:
         """Return VESSEL per-cell IC tables and edge hydraulic-diameter tables.
@@ -1783,7 +1783,7 @@ def register(mcp):
     @mcp.tool()
     def list_components(
         model_id: str,
-        component_type: str = None,
+        component_type: str | None = None,
         detail: str = "compact",
     ) -> dict:
         """List the model's components, grouped by type.
@@ -1950,7 +1950,7 @@ def register(mcp):
     def set_vessel_junction_grav(
         model_id: str,
         value: float,
-        junction_cc: int = None,
+        junction_cc: int | None = None,
         only_if_zero: bool = True,
     ) -> dict:
         """Set the GRAV term on vessel-to-vessel junction edges.
