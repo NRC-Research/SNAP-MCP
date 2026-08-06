@@ -11,6 +11,9 @@ Configuration (environment variables):
                       default: ~/.snap_trace/models.db
   SNAP_TRACE_WORKDIR  directory for auto-saved .med files
                       default: ~/.snap_trace/models/
+  SNAP_MCP_STARTUP_WAIT
+                      seconds a tool waits for MEBatch to finish starting
+                      before failing; default: 90
 """
 import sys
 import os
@@ -54,17 +57,24 @@ mcp = FastMCP(
     "snap-trace",
     instructions=(
         "Build TRACE thermal-hydraulic input decks using SNAP's native Python API. "
-        "Start with snap_status() to confirm the connection, then create_model() to begin. "
-        "Always call get_component_schema(type) before adding a new component type — "
-        "schemas include NRC modeling guidance defaults (dxin, volin, epsw, material numbers, "
-        "radial node counts). "
-        "For VESSEL components use connect_pipe_to_vessel() to attach 1-D pipes — "
-        "connect_components() uses 1-D junction labels that the VESSEL API rejects. "
-        "Use set_vessel_table() to initialize VESSEL per-cell ICs (p, tl, tv, alp) and "
-        "edge hydraulic diameters (hd_axial, hd_azimuthal, hd_radial) — "
-        "these tables are not reachable via set_component_property(). "
-        "For vessel-in-vessel Cartesian core models use compute_vessel_junctions() "
+        "Tool names below are written bare, but many MCP clients expose them with a "
+        "prefix (e.g. 'mcp_snap_trace_create_model'). Always call tools by the exact "
+        "name your client lists, never by the bare name written here. "
+        "Begin by creating a model (create_model) or opening an existing one "
+        "(open_med_model / import_trcin); tools wait for SNAP automatically, so there "
+        "is no need to poll snap_status first. "
+        "Always read a component's schema (get_component_schema) before adding a new "
+        "component type — schemas include NRC modeling guidance defaults (dxin, volin, "
+        "epsw, material numbers, radial node counts). "
+        "For VESSEL components attach 1-D pipes with connect_pipe_to_vessel — "
+        "connect_components uses 1-D junction labels that the VESSEL API rejects. "
+        "Initialize VESSEL per-cell ICs (p, tl, tv, alp) and edge hydraulic diameters "
+        "(hd_axial, hd_azimuthal, hd_radial) with set_vessel_table — "
+        "these tables are not reachable via set_component_property. "
+        "For vessel-in-vessel Cartesian core models use compute_vessel_junctions "
         "to generate the VESSEL junction Connection Edge Data from the core layout. "
+        "A clean validate_model result is NOT proof the deck runs: TRACE applies "
+        "checks SNAP does not, so confirm with run_trace before reporting success. "
         "See trace://workflow/analyst-guidance for scope and best practices. "
         "See trace://workflow/new-model for a step-by-step build guide. "
         "NRC TRACE modeling guidance: https://nrc-research.github.io/TRACE_guidance/"
@@ -90,13 +100,20 @@ resources.register(mcp)
 _GATEWAY_LOCK = threading.Lock()
 
 # Tools that do NOT touch the Py4J gateway and must work during init/reset
-# (so an agent can poll readiness). Everything else fails fast while MEBatch is
-# coming up.
+# (so a caller can poll readiness). Everything else waits for MEBatch to come
+# up — see the wait in _make_reconnect_wrapper.
 _ALWAYS_ALLOWED = {"snap_status", "compute_vessel_junctions"}
+
+# How long a gateway-touching tool will wait for MEBatch before giving up.
+# A cold MEBatch start is ~12-20 s; a reset() relaunch is comparable. This is
+# the ceiling on a genuinely stuck start, not the expected wait.
+_STARTUP_WAIT = float(os.environ.get("SNAP_MCP_STARTUP_WAIT", "90"))
+
 _INITIALIZING_MSG = (
-    "SNAP/MEBatch is still initializing or reconnecting (ready=false). "
-    "Call snap_status() and wait until ready=true before retrying this tool — "
-    "do not fire other tool calls until then."
+    "SNAP/MEBatch did not become ready within {seconds}s, so this tool could "
+    "not run. This means startup failed, not that you called too early — "
+    "retrying immediately will not help. Call snap_status() to see the error. "
+    "Detail: {detail}"
 )
 
 
@@ -122,11 +139,24 @@ def _make_reconnect_wrapper(fn, is_async: bool):
     else:
         @functools.wraps(fn)
         def _sync_wrapper(*args, **kwargs):
-            # Fail fast while MEBatch is (re)initializing: touching the gateway
-            # now races the background init thread, and a flood of queued calls
-            # each tripping reset() piles up dead MEBatch JVMs and wedges it.
+            # Never touch the gateway while MEBatch is (re)initializing: that
+            # races the background init thread, and a flood of queued calls each
+            # tripping reset() piles up dead MEBatch JVMs and wedges it.
+            #
+            # Block until the init thread signals ready rather than telling the
+            # caller to poll. An LLM agent has no clock and no sleep tool, so
+            # "wait 15 seconds and retry" is an instruction it cannot follow: it
+            # spends its whole turn budget re-calling snap_status() and gives up
+            # having done nothing. Waiting here is also strictly safer than the
+            # old immediate raise — a waiting call is parked on an event, so it
+            # cannot reach the gateway or trip reset() while init is in flight.
             if fn.__name__ not in _ALWAYS_ALLOWED and not snap_env.is_ready():
-                raise RuntimeError(_INITIALIZING_MSG)
+                ready, err = snap_env.wait_ready(_STARTUP_WAIT)
+                if not ready:
+                    raise RuntimeError(_INITIALIZING_MSG.format(
+                        seconds=int(_STARTUP_WAIT),
+                        detail=err or "no further detail available",
+                    ))
             try:
                 with _GATEWAY_LOCK:
                     return fn(*args, **kwargs)
