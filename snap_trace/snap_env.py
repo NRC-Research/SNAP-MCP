@@ -4,8 +4,10 @@ This module must be imported before any snap.* imports. It inserts the SNAP
 python directory into sys.path so that snap.codes.trace and py4j are found,
 then eagerly starts the MEBatch process so the first tool call has no delay.
 """
+import atexit
 import os
 import re
+import signal
 import subprocess
 import sys
 import threading
@@ -252,6 +254,39 @@ def _kill_own_mebatch() -> None:
     except Exception:
         pass
 
+
+def _shutdown_mebatch(signum=None, frame=None) -> None:
+    """Tear down our MEBatch JVM when this server exits.
+
+    Without this the JVM outlives the MCP process. That is not merely untidy:
+    an MCP client waits on its server's process tree, so a surviving JVM hangs
+    the client's shutdown indefinitely. Observed with crush -- the run finished
+    its work in 17 seconds and then sat for over two hours at 0% CPU with an
+    orphaned JVM alive, which reads as a hung agent rather than a completed one.
+
+    Only ever kills JVMs descended from this process (see _kill_own_mebatch),
+    so concurrent snap-trace servers are unaffected.
+    """
+    _kill_own_mebatch()
+    if signum is not None:
+        # Re-raise with the default handler so the exit status is honest.
+        try:
+            signal.signal(signum, signal.SIG_DFL)
+            os.kill(os.getpid(), signum)
+        except Exception:
+            pass
+
+
+atexit.register(_shutdown_mebatch)
+
+# SIGTERM/SIGINT are how a client stops its MCP server; without handlers the
+# atexit hook never runs. signal() only works on the main thread, so tolerate
+# failure rather than breaking import in a threaded host.
+for _sig in (signal.SIGTERM, signal.SIGINT):
+    try:
+        signal.signal(_sig, _shutdown_mebatch)
+    except (ValueError, OSError, AttributeError):
+        pass
 
 _reap_orphan_mebatch()
 
