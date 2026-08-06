@@ -179,9 +179,64 @@ def register(mcp):
         return {"model_id": model_id, "name": name, "version": version}
 
     @mcp.tool()
-    def list_models() -> list[dict]:
-        """List all models tracked in this session (persisted across restarts)."""
-        return session.list_models()
+    def list_models(detail: str = "compact", limit: int = 20,
+                    name_contains: str = "") -> dict:
+        """List models tracked in this session (persisted across restarts).
+
+        Returns the most recently created models first, because the registry
+        is append-only and never pruned -- it accumulates one row per
+        create_model/open_med_model/import_trcin call, so it grows without
+        bound across sessions and the newest entries are almost always the
+        ones being asked about.
+
+        Prefer the default over detail='full', and prefer reporting the count
+        over reproducing the list. Echoing every row back to the user is the
+        single most expensive thing an agent can do with this tool: the rows
+        re-enter the conversation as prompt AND have to be generated token by
+        token on the way out.
+
+        Parameters
+        ----------
+        detail : str
+            'compact' (default) returns at most `limit` models.
+            'full' returns every match, ignoring `limit`.
+        limit : int
+            Maximum models to return when detail='compact'. Clamped to >= 1.
+        name_contains : str
+            Case-insensitive substring filter on the model name. Useful
+            because names repeat -- several dozen rows may share one name.
+
+        Returns
+        -------
+        dict with total (matching the filter), returned, models, and a note
+        when the list was shortened.
+        """
+        rows = session.list_models()
+
+        needle = (name_contains or "").strip().lower()
+        if needle:
+            rows = [r for r in rows if needle in (r.get("name") or "").lower()]
+
+        total = len(rows)
+        out = {"total": total}
+        if needle:
+            out["name_contains"] = name_contains
+
+        if detail == "full":
+            shown = rows
+        else:
+            shown = rows[:max(1, int(limit))]
+
+        out["returned"] = len(shown)
+        out["models"] = shown
+        if len(shown) < total:
+            out["note"] = (
+                f"{total} models match; showing the {len(shown)} most recent. "
+                f"Narrow with name_contains=, raise limit=, or pass "
+                f"detail='full' for all. Report the count rather than "
+                f"listing every row unless asked for the full list."
+            )
+        return out
 
     @mcp.tool()
     def open_med_model(med_file_path: str = "", name: str = "",

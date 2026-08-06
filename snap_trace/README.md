@@ -140,7 +140,7 @@ Add under `mcpServers` in your desktop configuration (macOS: `~/Library/Applicat
 | `create_model` | Start a new empty model |
 | `open_med_model` | Open an existing `.med` file |
 | `import_trcin` | Import a TRACE ASCII input deck |
-| `list_models` | List all models in the session registry |
+| `list_models` | List models in the session registry, newest first (20 by default; `limit`, `name_contains`, `detail='full'`) |
 | `get_component_schema` | Describe a component type's properties and guidance |
 | `add_component` | Add a component to the model |
 | `set_component_property` | Set a property on an existing component |
