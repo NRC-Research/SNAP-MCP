@@ -40,7 +40,7 @@ def _fixup_trcin(content: str, integer_fix: bool = False) -> str:
     fields. The implementation is not -- r'\\b(\\d+)\\.0\\b' matches anywhere in
     the file, with no notion of which field it is in.
 
-    Measured on a plant deck (~31,000 lines) against TRACE V5.1831.1:
+    Measured on a large plant deck (~31,000 lines) against TRACE V5.1831.1:
     enabling it rewrote **16,238 lines**, including
 
         chm12=1.0,                     ->  chm12=1,        (namelist real)
