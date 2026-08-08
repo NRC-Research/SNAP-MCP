@@ -21,5 +21,13 @@ v2v = [
 [project.scripts]
 snap-trace-mcp = "mcp_server:main"
 
+# The v2v extra above pins vessel2vessel to a commit via a PEP 508 direct
+# reference. Hatchling refuses to generate metadata containing a direct
+# reference unless this is set, and it fails at metadata generation for ANY
+# install of this project - including a plain `pip install --editable .` that
+# never requests the v2v extra, because the extra still has to be recorded.
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["snap_trace"]
