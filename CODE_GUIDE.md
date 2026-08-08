@@ -4,6 +4,95 @@ Developer reference for the SNAP-MCP codebase.
 
 ---
 
+## Handoff — 2026-08-08
+
+No code changed this session. The subject was **this repository being public**, and what had
+already been published in it.
+
+### What was found
+
+An audit of the handoff sections above turned up material that should not have been in a public
+repo: a named licensee plant model together with an assertion of a modeling defect in it, names
+and PR numbers belonging to private repositories, provisioning role paths, a self-hosted model
+endpoint name, host topology including the route to the development VM, and a narrative of a
+vendor plugin jar being modified. A repo-wide sweep found three more instances outside
+`CODE_GUIDE.md` — the companion MELCOR README carried the fullest provisioning paths of all.
+
+Deliberately **kept**: the weak-agent autonomy narrative. Demonstrating that a weak local model
+can drive these tools unaided is the point of the project, not an incidental disclosure.
+
+### What was done
+
+- **PR #12** redacted all of it, replacing identifiers with generic phrasing. Every engineering
+  lesson survives — the vessel junction GRAV finding, the provisioning allowlist asymmetry, the
+  shared-home versus host-local `/opt` trap, the jar integrity rules.
+- **History was rewritten** (`git filter-repo`) and force-pushed: `main` `7d7407d` → `5090e2a`,
+  50 → 48 commits. Two doc-only commits became empty once the doc versions collapsed to one and
+  were pruned; their text survives in the current file. Verified 0 pattern hits across all
+  branch history.
+- **Both deployed checkouts were reset** and garbage-collected. Note the trap: `git reset --hard`
+  cleans tracked files but leaves `__pycache__/*.pyc`, which embeds docstrings — an unredacted
+  copy of a docstring survived there, gitignored and invisible to a source grep. Clear bytecode
+  caches on every machine that imported the module.
+
+### What a rewrite does NOT fix
+
+**Force-pushing branches does not touch `refs/pull/*`.** GitHub creates those refs when a PR is
+opened, they survive merge, branch deletion, and force-push, and nothing you control can delete
+them. Because they stay reachable, the pre-rewrite commits are never garbage-collected — the old
+diffs still render on PR pages #1-#12. Only GitHub Support can remove them.
+
+**GitHub Support ticket #4646440** was filed for that purge (severity: security exposure; First
+Changed Commit `6838376` → `655935f`, i.e. the root commit — the material was present from the
+initial public release). Until Support acts, the redaction is incomplete. The risk to watch is
+their policy of removing sensitive data only and not "non-sensitive data"; with no credentials
+involved they may decline. The argument made in the ticket is that credential rotation is not an
+available mitigation here, so removal is the only one.
+
+Verify closure with a 404 on the pre-rewrite commit via the REST API, and an empty
+`git ls-remote origin 'refs/pull/*'`.
+
+### Guardrails added (PR #13, PR #15)
+
+`main` now carries a ruleset: PR + 1 approval, no force-push, no deletion, and a required
+`redaction-scan` check. Org and repo admins retain `always` bypass, so it stops accidents and
+everyone else, but is advisory for an admin acting deliberately.
+
+- `.githooks/pre-commit` blocks staged content matching a denylist; `.githooks/commit-msg`
+  rejects AI attribution in commit messages (message only — the docs discuss AI tooling as
+  subject matter, which is legitimate).
+- `.github/workflows/redaction-check.yml` runs the same scan on every PR. Hooks are per-clone and
+  never travel with a push, so the workflow is the backstop for machines that skipped
+  installation and for merges made in the web UI.
+- Secret scanning **push protection** was enabled (it was off). It only catches credentials —
+  it would never have caught these identifiers, which is why the custom check exists.
+
+**The denylist is deliberately not in this repo.** A file listing the strings being kept out
+would republish them. It lives at `~/.config/snap-mcp/redaction-patterns.txt` (mode 600, and note
+`/home` is NFS-shared, so it is visible from any host sharing that home) and in the
+`REDACTION_PATTERNS` Actions secret. Neither the hook nor the workflow ever prints a matched
+line — Actions logs on a public repo are world-readable, so echoing a match would leak it as
+effectively as committing it. Both report `file:line` only.
+
+**Both fail closed**, and this was not theoretical: the first hook revision used `mapfile`, absent
+from the bash 3.2 macOS ships. It errored and *allowed* the commit it should have blocked — a
+guardrail that looks installed and does nothing. Now verified on bash 3.2 and 5.1 with negative
+controls, and the CI check was verified to actually fail on a violation using a benign sentinel
+pattern (never a real identifier, which would have published it).
+
+### Where to pick up
+
+- **Ticket #4646440 is the only open item.** Chase it; verify rather than trusting the
+  confirmation, since GC can lag.
+- **Hooks are installed on the Mac clone and the development VM only.** Any third machine that
+  commits needs the pattern file plus one run of `scripts/install-hooks.sh`.
+- **The denylist is only as good as its 17 entries.** Add new categories as they appear, and
+  re-run `gh secret set REDACTION_PATTERNS` so CI and hooks stay in sync.
+- The commit-msg hook described in global instructions as "installed in this repository" was
+  **not** actually present before this session. It is now, via `.githooks`.
+
+---
+
 ## Handoff — 2026-08-06
 
 ### What was actually wrong
