@@ -5,7 +5,7 @@ import_trcin, never pruned, so it grows without bound (159 rows on the dev box
 after a few weeks). list_models returned every row, and a prompt like "call
 list_models and report exactly what it returns" then cost ~5 minutes -- the
 rows re-enter the conversation as prompt and are regenerated token by token on
-the way out. Measured on the self-hosted devstral endpoint: 15.9 KB of output took 332 s, while
+the way out. Measured on a self-hosted devstral: 15.9 KB of output took 332 s, while
 the same question phrased as a count took 20 s.
 
     python tests/test_list_models_summary.py
