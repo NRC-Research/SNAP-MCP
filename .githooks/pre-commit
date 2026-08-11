@@ -3,11 +3,11 @@
 # public repository.
 #
 # The pattern list lives OUTSIDE the repo, because a denylist of sensitive
-# strings is itself sensitive. Default location:
+# strings is itself sensitive. Point SNAP_MCP_PATTERNS at it -- one pattern per
+# line. There is deliberately no default: a hardcoded fallback would publish
+# the file's location to everyone who can read this repo.
 #
-#     ~/.config/snap-mcp/redaction-patterns.txt   (one pattern per line)
-#
-# Override with SNAP_MCP_PATTERNS. Install with: scripts/install-hooks.sh
+# Install with: scripts/install-hooks.sh
 #
 # Like the CI check, this reports file and line only and never prints the
 # matched text.
@@ -18,11 +18,18 @@
 
 set -uo pipefail
 
-PATTERNS="${SNAP_MCP_PATTERNS:-$HOME/.config/snap-mcp/redaction-patterns.txt}"
+PATTERNS="${SNAP_MCP_PATTERNS:-}"
+
+if [ -z "$PATTERNS" ]; then
+  echo "pre-commit: SNAP_MCP_PATTERNS is not set." >&2
+  echo "  Point it at your redaction pattern file, one pattern per line, kept" >&2
+  echo "  outside this repository. The redaction check cannot run without it." >&2
+  exit 1
+fi
 
 if [ ! -s "$PATTERNS" ]; then
   echo "pre-commit: pattern file not found or empty: $PATTERNS" >&2
-  echo "  The redaction check cannot run. Create it, set SNAP_MCP_PATTERNS," >&2
+  echo "  The redaction check cannot run. Create it, correct SNAP_MCP_PATTERNS," >&2
   echo "  or bypass deliberately with: git commit --no-verify" >&2
   exit 1
 fi
