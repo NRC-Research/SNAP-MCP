@@ -40,17 +40,45 @@ can drive these tools unaided is the point of the project, not an incidental dis
 **Force-pushing branches does not touch `refs/pull/*`.** GitHub creates those refs when a PR is
 opened, they survive merge, branch deletion, and force-push, and nothing you control can delete
 them. Because they stay reachable, the pre-rewrite commits are never garbage-collected — the old
-diffs still render on PR pages #1-#12. Only GitHub Support can remove them.
+diffs went on rendering on PR pages #1-#12 after the rewrite reported success. Only GitHub Support
+can remove them.
 
-**GitHub Support ticket #4646440** was filed for that purge (severity: security exposure; First
-Changed Commit `6838376` → `655935f`, i.e. the root commit — the material was present from the
-initial public release). Until Support acts, the redaction is incomplete. The risk to watch is
-their policy of removing sensitive data only and not "non-sensitive data"; with no credentials
-involved they may decline. The argument made in the ticket is that credential rotation is not an
-available mitigation here, so removal is the only one.
+**GitHub Support ticket #4646440** was filed for that purge (First Changed Commit `6838376` →
+`655935f`, i.e. the root commit — the material was present from the initial public release). The
+anticipated risk was their policy of removing sensitive data only and not "non-sensitive data";
+with no credentials involved they might have declined. The argument made in the ticket was that
+credential rotation is not an available mitigation here, so removal is the only one.
 
-Verify closure with a 404 on the pre-rewrite commit via the REST API, and an empty
-`git ls-remote origin 'refs/pull/*'`.
+**Resolved 2026-08-11** — Support removed the internal references for #1-#12, ran garbage
+collection, and cleared the repository cache. Reuse that argument if this ever recurs: it was
+accepted without pushback, and their tooling independently enumerated the same PRs #1-#12. They
+offer two remedies — delete the pull requests outright, or delete only their internal references.
+Take the second: the diffs and the objects behind them go, while the PR pages, titles, and comment
+history survive. Turnaround was about two and a half days end to end.
+
+**On severity, in retrospect.** The ticket was filed as a security exposure, which was the right
+posture for getting it actioned, and the paragraphs above preserve it as the record of what was
+argued. The actual exposure was narrower: reputational, not proprietary. The plant model and the
+asserted defect are both this organization's own work — no vendor proprietary information and no
+export-controlled information was involved, and internally none of it would have registered at
+all. The realistic harm was a public reader asking what was being covered up or what mistakes had
+been made. Calibrate a repeat on that basis: worth removing promptly, not worth an incident
+response.
+
+**Verifying closure.** Check it yourself rather than trusting the confirmation — GC can lag a
+reported completion.
+
+```
+git ls-remote origin 'refs/pull/*'                    # expect only post-rewrite PRs
+gh api repos/NRC-Research/SNAP-MCP/commits/6838376    # expect 404
+```
+
+The criterion is **not** an empty `refs/pull/*`, which is what this section said in its first
+draft and is wrong. PRs #13-#16 were opened after the rewrite, so their refs are legitimate and
+stay. The real test is that the pre-rewrite SHAs 404 and that no `refs/pull/N` below 13 survives —
+any future rewrite needs the same distinction drawn against whatever the PR numbering is then.
+Verified 2026-08-11: `6838376`, `7d7407d`, and `596052c` all 404, and only `refs/pull/13..16/head`
+remain.
 
 ### Guardrails added (PR #13, PR #15)
 
@@ -82,8 +110,9 @@ pattern (never a real identifier, which would have published it).
 
 ### Where to pick up
 
-- **Ticket #4646440 is the only open item.** Chase it; verify rather than trusting the
-  confirmation, since GC can lag.
+- **Ticket #4646440 is closed and the purge is verified.** Nothing is outstanding from the
+  redaction work. Note that the `refs/pull/*` problem recurs in full on any future rewrite, and
+  Support is again the only route through it.
 - **Hooks are installed on the Mac clone and the development VM only.** Any third machine that
   commits needs the pattern file plus one run of `scripts/install-hooks.sh`.
 - **The denylist is only as good as its 17 entries.** Add new categories as they appear, and
