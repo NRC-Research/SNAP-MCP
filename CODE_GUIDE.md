@@ -4,405 +4,6 @@ Developer reference for the SNAP-MCP codebase.
 
 ---
 
-## Handoff — 2026-08-08
-
-No code changed this session. The subject was **this repository being public**, and what had
-already been published in it.
-
-### What was found
-
-An audit of the handoff sections above turned up material that should not have been in a public
-repo: a named licensee plant model together with an assertion of a modeling defect in it, names
-and PR numbers belonging to private repositories, provisioning role paths, a self-hosted model
-endpoint name, host topology including the route to the development VM, and a narrative of a
-vendor plugin jar being modified. A repo-wide sweep found three more instances outside
-`CODE_GUIDE.md` — the companion MELCOR README carried the fullest provisioning paths of all.
-
-Deliberately **kept**: the weak-agent autonomy narrative. Demonstrating that a weak local model
-can drive these tools unaided is the point of the project, not an incidental disclosure.
-
-### What was done
-
-- **PR #12** redacted all of it, replacing identifiers with generic phrasing. Every engineering
-  lesson survives — the vessel junction GRAV finding, the provisioning allowlist asymmetry, the
-  shared-home versus host-local `/opt` trap, the jar integrity rules.
-- **History was rewritten** (`git filter-repo`) and force-pushed: `main` `7d7407d` → `5090e2a`,
-  50 → 48 commits. Two doc-only commits became empty once the doc versions collapsed to one and
-  were pruned; their text survives in the current file. Verified 0 pattern hits across all
-  branch history.
-- **Both deployed checkouts were reset** and garbage-collected. Note the trap: `git reset --hard`
-  cleans tracked files but leaves `__pycache__/*.pyc`, which embeds docstrings — an unredacted
-  copy of a docstring survived there, gitignored and invisible to a source grep. Clear bytecode
-  caches on every machine that imported the module.
-
-### What a rewrite does NOT fix
-
-**Force-pushing branches does not touch `refs/pull/*`.** GitHub creates those refs when a PR is
-opened, they survive merge, branch deletion, and force-push, and nothing you control can delete
-them. Because they stay reachable, the pre-rewrite commits are never garbage-collected — the old
-diffs went on rendering on PR pages #1-#12 after the rewrite reported success. Only GitHub Support
-can remove them.
-
-**GitHub Support ticket #4646440** was filed for that purge (First Changed Commit `6838376` →
-`655935f`, i.e. the root commit — the material was present from the initial public release). The
-anticipated risk was their policy of removing sensitive data only and not "non-sensitive data";
-with no credentials involved they might have declined. The argument made in the ticket was that
-credential rotation is not an available mitigation here, so removal is the only one.
-
-**Resolved 2026-08-11** — Support removed the internal references for #1-#12, ran garbage
-collection, and cleared the repository cache. Reuse that argument if this ever recurs: it was
-accepted without pushback, and their tooling independently enumerated the same PRs #1-#12. They
-offer two remedies — delete the pull requests outright, or delete only their internal references.
-Take the second: the diffs and the objects behind them go, while the PR pages, titles, and comment
-history survive. Turnaround was about two and a half days end to end.
-
-**On severity, in retrospect.** The ticket was filed as a security exposure, which was the right
-posture for getting it actioned, and the paragraphs above preserve it as the record of what was
-argued. The actual exposure was narrower: reputational, not proprietary. The plant model and the
-asserted defect are both this organization's own work — no vendor proprietary information and no
-export-controlled information was involved, and internally none of it would have registered at
-all. The realistic harm was a public reader asking what was being covered up or what mistakes had
-been made. Calibrate a repeat on that basis: worth removing promptly, not worth an incident
-response.
-
-**Verifying closure.** Check it yourself rather than trusting the confirmation — GC can lag a
-reported completion.
-
-```
-git ls-remote origin 'refs/pull/*'                    # expect only post-rewrite PRs
-gh api repos/NRC-Research/SNAP-MCP/commits/6838376    # expect 404
-```
-
-The criterion is **not** an empty `refs/pull/*`, which is what this section said in its first
-draft and is wrong. PRs #13-#16 were opened after the rewrite, so their refs are legitimate and
-stay. The real test is that the pre-rewrite SHAs 404 and that no `refs/pull/N` below 13 survives —
-any future rewrite needs the same distinction drawn against whatever the PR numbering is then.
-Verified 2026-08-11: `6838376`, `7d7407d`, and `596052c` all 404, and only `refs/pull/13..16/head`
-remain.
-
-### Guardrails added (PR #13, PR #15)
-
-`main` now carries a ruleset: PR + 1 approval, no force-push, no deletion, and a required
-`redaction-scan` check. Org and repo admins retain `always` bypass, so it stops accidents and
-everyone else, but is advisory for an admin acting deliberately.
-
-- `.githooks/pre-commit` blocks staged content matching a denylist; `.githooks/commit-msg`
-  rejects AI attribution in commit messages (message only — the docs discuss AI tooling as
-  subject matter, which is legitimate).
-- `.github/workflows/redaction-check.yml` runs the same scan on every PR. Hooks are per-clone and
-  never travel with a push, so the workflow is the backstop for machines that skipped
-  installation and for merges made in the web UI.
-- Secret scanning **push protection** was enabled (it was off). It only catches credentials —
-  it would never have caught these identifiers, which is why the custom check exists.
-
-**The denylist is deliberately not in this repo.** A file listing the strings being kept out
-would republish them. It lives at `~/.config/snap-mcp/redaction-patterns.txt` (mode 600, and note
-`/home` is NFS-shared, so it is visible from any host sharing that home) and in the
-`REDACTION_PATTERNS` Actions secret. Neither the hook nor the workflow ever prints a matched
-line — Actions logs on a public repo are world-readable, so echoing a match would leak it as
-effectively as committing it. Both report `file:line` only.
-
-**Both fail closed**, and this was not theoretical: the first hook revision used `mapfile`, absent
-from the bash 3.2 macOS ships. It errored and *allowed* the commit it should have blocked — a
-guardrail that looks installed and does nothing. Now verified on bash 3.2 and 5.1 with negative
-controls, and the CI check was verified to actually fail on a violation using a benign sentinel
-pattern (never a real identifier, which would have published it).
-
-### Where to pick up
-
-- **Ticket #4646440 is closed and the purge is verified.** Nothing is outstanding from the
-  redaction work. Note that the `refs/pull/*` problem recurs in full on any future rewrite, and
-  Support is again the only route through it.
-- **Hooks are installed on the Mac clone and the development VM only.** Any third machine that
-  commits needs the pattern file plus one run of `scripts/install-hooks.sh`.
-- **The denylist is only as good as its 17 entries.** Add new categories as they appear, and
-  re-run `gh secret set REDACTION_PATTERNS` so CI and hooks stay in sync.
-- The commit-msg hook described in global instructions as "installed in this repository" was
-  **not** actually present before this session. It is now, via `.githooks`.
-
----
-
-## Handoff — 2026-08-06
-
-### What was actually wrong
-
-Tool-using `crush run` invocations had been returning **exit 0 with empty output** while a
-no-tool prompt worked. None of it was this codebase's quality, and none of it was the crush
-version — two things that had been blamed in turn.
-
-- **A hyphen in the MCP server key** (client-side, `crush.json`). crush derives each tool's name
-  from the server key, so `"snap-trace"` yields `mcp_snap-trace_create_model`; the model emits
-  the hyphen back as an **underscore**, crush answers `tool not found`, the agent retries ~10x
-  and exits 0 having printed nothing. **No log line names the cause.** `ssh` was never affected
-  because its key has no hyphen. Fixed in the running config, in both provisioning roles, and in
-  the internal skills repo that had been publishing the broken config.
-- **`_sync_wrapper` refused instead of waiting** (`5383d05`..`12cc3f2`). Tools already called
-  `snap_env.wait_ready()` in their bodies, but the wrapper raised `_INITIALIZING_MSG` first —
-  so the two mechanisms fought and the in-body wait was dead code. The message told the caller
-  to poll `snap_status()` and retry, which **an LLM agent cannot do**: no clock, no sleep tool,
-  ten turns spent polling. Now waits on the init thread (`SNAP_MCP_STARTUP_WAIT`, default 90 s)
-  and raises only on a genuinely stuck start. **The protection from `e31c7e4` is intact** — a
-  waiting call is parked on an event, so it cannot reach the gateway or trip `reset()` mid-init,
-  and unlike a refusal it does not come straight back as a retry.
-- **The provisioning allowlist is static and crush silently enforces it.** Six shipped tools
-  were absent from the images in use: `get_model_options`, `get_vessel_junctions`,
-  `set_vessel_junction_grav`, `compute_vessel_junctions`, `apply_vessel_junctions`, `run_trace`.
-  The provisioning role clones `SNAP-MCP@main` with `force: true`, so **code flows in
-  automatically while the allowlist does not** — that asymmetry is how the gap opened, and it
-  will reopen the same way.
-
-### Changed here
-
-- **PR #7** — `list[str] = None` / `int = None` → `T | None` on `get_vessel_tables(tables)`,
-  `list_components(component_type)`, `set_vessel_junction_grav(junction_cc)`. The old form makes
-  the schema advertise a non-null type with a `null` default, which strict clients reject.
-- **PR #8** — the wait above, plus `path` accepted as an alias for `med_file_path`/`trcin_path`
-  (everyone guesses `path`; the validation error then names a field the caller never used, which
-  reads as a broken tool), plus server instructions that no longer write tool names bare (clients
-  expose them prefixed) and that state a clean `validate_model` is **not** proof a deck runs.
-- **PR #9** — `list_models` is summary-first. The registry is append-only and never pruned (160+
-  rows on the dev box); it returned every one. Now returns the 20 newest with a true `total`,
-  plus `limit`, `name_contains`, `detail='full'`.
-
-### Performance reality — it is decode speed, not a hang
-
-`EXIT=124` with complete output is **not** a shutdown hang; it is a timeout firing during
-generation. Measured against the self-hosted devstral endpoint, elapsed time tracks *output
-size* at roughly **12 tokens/sec**: 16 B → 20 s, 387 B → 28 s, 15.9 KB → 332 s (twice). The
-tools are fast — an 819-component plant model opens in **5.8 s** and `get_vessel_junctions`
-answers in **0.3 s**.
-
-Three things that look like a stall and are not: a goroutine parked in
-`chunkedReader.beginChunk` (waiting for the next token, ~80 ms apart), an unanswered HTTP
-request in crush's debug log (still generating — it replays standalone in 7 s), and output
-looking complete while the process runs on (earlier turns streamed; a later turn is decoding).
-`Connection: close` changed nothing (333 s vs 332 s), which rules out connection reuse — though
-the model server *does* close idle keep-alive connections at exactly **5 s** (uvicorn default)
-while MCP tool calls routinely idle longer.
-
-**So prompt shape is the cost driver, not tool speed.** `"report exactly what it returns"`
-against `list_models` cost 332 s; `"report only how many models exist"` cost 20 s. Guidance for
-analysts is in the internal snap-trace skills README ("Asking well").
-
-### Verified
-
-```
-crush run --quiet "Open the SNAP model file .../<a large plant deck>.med and report how many
-                   vessel junction edges have GRAV of zero, and how many models are now in
-                   the registry. Be brief."
-→ "36 vessel junction edges have GRAV of zero. There are 162 models in the registry."   (22 s)
-```
-
-Every vessel junction edge in that deck reads zero, which is ground truth for it — a defect
-invisible to `find_component()` and to SNAP's own validation (SNAP-issues#130).
-
-### Where to pick up
-
-- **An image rebuild is pending** for the provisioning fix, so freshly built images do not carry
-  it yet. Confirm the rebuild has run before treating a new image as fixed.
-- **Watch the checkout, not just the deploy.** The deployed checkout was found **9 commits behind
-  `origin/main`**, and a redeploy from it silently shipped without `run_trace` or the
-  vessel-junction tools. Pull first, then grep the deployed tree for the tools you expect.
-- `mcp-ssh-go` is **healthy**. A one-shot `printf | server` test exits 1 with
-  `server is closing: EOF` — normal for MCP Go SDK servers when stdin closes. Do not conclude
-  from that test that a server is broken.
-- Remaining agent-side friction is devstral's own reliability: the same task phrased two ways
-  either answers in 2 model calls or loops ten times and stops with empty content. The tools are
-  no longer what stands in the way.
-
----
-
-## Handoff — 2026-05-30
-
-### Milestone reached
-
-**A weak local model (devstral, via crush) built a complete, VALID single-loop PWR
-primary TRACE model end-to-end through the snap-trace MCP tools, with no human
-intervention** — correct components + connections, `validate_model` 0 errors, and it
-saved the deck itself (`~/test-ai/dev-crush.med`, also `/tmp/dev-crush.med`). The goal
-was never "produce a valid model" — it was "make the MCP forgiving enough that a weak
-agent produces one itself." That is now demonstrated.
-
-### What this session changed (all on `main`, pushed)
-
-Driven by watching where devstral failed, then making each failure impossible or
-self-explanatory. Most-impactful first:
-
-- **`is_connection_broken` no longer misreads Java errors as a dead gateway** (`f136acf`).
-  It matched the substring `"GatewayConnection"`, present in the `at py4j.GatewayConnection.run`
-  frame of EVERY `Py4JJavaError` traceback — so a routine Java/modeling error (e.g. a bad
-  `connect_components` `setJun2`) reset a *healthy* gateway on every failed call. devstral
-  makes many imperfect calls, so it looked like the gateway broke constantly; it never did.
-  Now only true network errors (Py4JNetworkError, connection refused, broken pipe) count.
-- **`connect_components` auto-resolves the target junction slot** (`b5da3e2`). The slot is the
-  TARGET's junction label, not the source's — agents always got it wrong, looping on
-  `InvalidFaceException`. Now BREAK/FILL→`[JUN1] Inlet`, pipe→free end; a wrong/blank value is
-  corrected (`slot_note`), and a no-free-junction target returns a clear actionable error
-  ("a pipe cannot connect both ends to the same target…") instead of a raw Py4J trace.
-- **Real in-process gateway recovery** (`b614e81`, `567c1c9`, `388406c`, `e1000dc`, `b46ad38`):
-  on a genuine break, `reset()` kills the old JVM once, `shutdown()`s SNAP's `__MODEL_EDITOR__`
-  singleton, and `find_plugin` relaunches MEBatch in the same process; `get_model()` reloads each
-  model from its autosaved `.med`, so an agent's `model_id` survives a restart. Do NOT kill the
-  in-flight relaunch or evict snap/py4j modules — that was the wedge. ("TRACE already loaded" in
-  the MEBatch log is benign — appears on every launch.)
-- **Gateway serialized** (`e31c7e4`, `e1000dc`): a single `_GATEWAY_LOCK` serializes
-  all tool calls (the Py4J socket is not thread-safe; FastMCP runs sync tools on a thread pool).
-  Tools originally *failed fast* while `not is_ready()`; they now **wait** on the init thread
-  (`SNAP_MCP_STARTUP_WAIT`, default 90 s) and only raise if startup genuinely never completes.
-  The protection is unchanged — a waiting call is parked on an event, so it still cannot reach
-  the gateway or trip `reset()` mid-init — but "poll snap_status and retry" was an instruction
-  no LLM agent could follow, and it made the server unusable from crush/devstral.
-- **Multi-tenant MEBatch** (`6d3a5a0`, `77b0f79`): startup and `reset()` no longer `pkill -f MEBatch`
-  (killed other crush/Copilot/Claude tenants' JVMs); they reap orphans / own-only.
-- **Weak-agent forgiveness**: property "did you mean" + real settable names on unknown-prop errors
-  (`cb32af0`); `review_model` structural flags (`995925b`); VESSEL `name`→`ctitle`; y-angle
-  full-circle snap-to-360.
-- **New read/review tools**: `get_pipe_edges`, `get_pipe_cells`, `get_vessel_tables`, `review_model`
-  (`02fc679`, `9572e99`) — for reviewing existing/imported decks. **Tool count is now 27.**
-- **Diagnostics**: server logs to `~/.snap_trace/server.log` and logs the real exception + tool
-  + args on a gateway break (`fb5b357`) — invaluable; the `is_connection_broken` root cause came
-  straight from it.
-
-### Image provisioning
-
-Both the Linux and Windows images install snap-trace via an Ansible role that clones
-`SNAP-MCP@main` with `force: true` on every build → **code fixes flow in automatically**.
-The one manual step is the **static crush allowed-tools list** carried in each role (crush won't
-call a tool not in the list). It was missing `set_pipe_ics`, `check_loop_closure`,
-`export_check_report` plus the 4 new tools — now updated to all 27 in both. **Whenever a tool is
-added/removed, update both allowlists.**
-
-### Where to pick up
-
-- snap-trace + the recovery/forgiveness work is solid; both crush (devstral) and Claude/Copilot
-  drive it cleanly. Pending from earlier: the MELCOR-mirror task (see 2026-05-24 below).
-- If revisiting devstral autonomy, run crush-vpc on the development VM and watch
-  `~/.snap_trace/server.log` + the model `.med` growth; the next weak-agent friction will show
-  there. Keep the loop: drive the agent → see where the tool fails it → make the tool forgiving.
-- Note: `crush-vpc` had an unrelated startup break this session (Catwalk catalog shipped Bedrock
-  `us.anthropic.*` models v0.60.0 rejects); fixed by `CATWALK_URL`→a local clean catalog in the
-  root-owned wrapper. See memory `reference-crush-vpc-catwalk-fix`.
-
----
-
-## Handoff — 2026-05-28
-
-### Where to pick up
-
-**State:** snap-trace and snap-melcor are both working on **the development VM** and wired into
-**two MCP clients** — GitHub Copilot CLI (new this session) and crush. All 15 snap-trace tools
-were smoke-tested green against the live build (no version-API gaps).
-
-**Open / next task (carried from 2026-05-24, still pending):** Build the MELCOR mirror of
-`~/test-ai/vessel-test.inp` via snap-melcor — see the 2026-05-24 handoff below for the
-`crush-vpc` recipe and the model scale-up blocker. Copilot CLI is now an
-alternative driver (uses GitHub's `claude-opus-4.6`, independent of the model hosting cluster),
-so the MELCOR-mirror task can be run through Copilot without scaling up the cluster.
-
-### Host / install topology (important — caused a wrong-path detour this session)
-
-- The login host and the development VM are **different hosts** that share **`/home` over a
-  network filesystem**, while **`/opt` is host-local** — so `/opt/snap` exists only on the
-  development VM. A shared home directory makes the two look identical until an `/opt` path is
-  involved. Always run/test SNAP on the development VM, not the login host.
-- **Two SNAP installs, use the right one per server:**
-  - `/opt/snap/python` — TRACE plugin **4.7.0**, has `snap.codes.trace.new_model()`. **snap-trace.**
-  - `~/snap/python` — OLDER TRACE 4.5.2 (no `new_model`); has MELCOR plugin 2.7.1. **snap-melcor only.**
-  - Pointing snap-trace at `~/snap/python` → `create_model` fails with
-    `module 'snap.codes.trace' has no attribute 'new_model'`.
-
-### MCP client config
-
-**Copilot CLI** (`~/.copilot/mcp-config.json`; manage with `copilot mcp add|list|get`;
-non-interactive `copilot --allow-all-tools -p "..."`):
-```jsonc
-"snap-trace":  { "type":"local","command":"python3.12",
-                 "args":["/home/user/SNAP-MCP/mcp_server.py"],
-                 "env":{"SNAP_PYTHON_PATH":"/opt/snap/python"}, "tools":["*"], "timeout":60000 }
-"snap-melcor": { "type":"local","command":"python3.12",
-                 "args":["/home/user/SNAP-MCP/snap-melcor/mcp_server.py"],
-                 "env":{"SNAP_PYTHON_PATH":"/home/user/snap/python",
-                        "PYTHONPATH":"/home/user/SNAP-MCP/snap-melcor:/home/user/snap/python"},
-                 "tools":["*"], "timeout":60000 }
-```
-**crush** (`~/.config/crush/crush.json`, MCP under top-level `"mcp"`): snap-trace env corrected
-back to `/opt/snap/python` this session (snap-melcor unchanged at `~/snap/python`).
-
-### Plugin jar integrity (resolved)
-
-The vendor's TRACE plugin jar is signed, and a modified copy will not load — TRACE fails with
-`PluginNotFound: 'TRACE'` and `snap_status` stays `ready:false`. **Do not modify or rebuild the
-plugin jar**; it is not a supported path. Use the Py4J reflection path the MCP already uses.
-
-Two operational notes that cost time here:
-
-- Keep a pristine copy of the vendor jar alongside the installed one, so the original can be put
-  back without a reinstall.
-- Make sure the restored jar is readable by the account running SNAP. An unreadable jar surfaces
-  as `plugin_version: null` rather than as an obvious permission error, which is easy to
-  misdiagnose as a plugin problem.
-
-Healthy state after recovery: cold start `ready:true`, `snap_plugin_version:"4.7.0"`.
-
-### What was completed this session
-
-- Registered snap-trace + snap-melcor in Copilot CLI on the development VM; verified `create_model`,
-  `melcor_status` end-to-end.
-- Corrected `SNAP_PYTHON_PATH` for snap-trace (Copilot + crush) to `/opt/snap/python`.
-- Smoke-tested all 15 snap-trace tools (create/schema/add ×3/set/set_pipe_ics/connect ×2/
-  get_connections/list/get/validate/export/save) — all pass, `validate_model` 0 errors/0 warnings
-  (confirms the Java-reflection validation paths work on the live signed jar).
-- Diagnosed and recovered the plugin jar loading failure (above).
-
----
-
-## Handoff — 2026-05-24
-
-### Where to pick up
-
-**Immediate next task:** Run `crush-vpc` on the development VM (as target user) and ask it to use the **snap-melcor** MCP tools to build a MELCOR mirror of the TRACE input deck at `~/test-ai/vessel-test.inp`. Save output to `~/test-ai/vessel_test_melcor.med` and `~/test-ai/vessel_test_melcor.inp`.
-
-**Blocker:** The model deployment backing `crush-vpc` was scaled to zero, so the endpoint refused
-connections. It has to be scaled back up before running; cold start takes ~15–20 min (GPU node
-scheduling plus image pull).
-
-**snap-melcor is fully registered** in `~/.config/crush/crush.json` on the development VM and exposes 15 tools. Configuration block:
-```json
-"snap-melcor": {
-  "type": "stdio",
-  "command": "python3.12",
-  "args": ["/home/user/SNAP-MCP/snap-melcor/mcp_server.py"],
-  "env": {
-    "SNAP_PYTHON_PATH": "/home/user/snap/python",
-    "PYTHONPATH": "/home/user/SNAP-MCP/snap-melcor:/home/user/snap/python"
-  },
-  "timeout": 60,
-  "disabled": false
-}
-```
-
-### What was completed this session
-
-**snap-trace (VESSEL improvements):**
-- Added `connect_pipe_to_vessel` tool — fixes silent junction failure; VESSEL API rejects `[JUN1] Inlet`, needs `"Positive Azimuthal"` etc.
-- Added `set_vessel_table` tool — sets per-cell ICs and edge HDs via `Hydro3DPropertyTable` (unreachable via `set_component_property`)
-- Both tools live-tested with crush-vpc on the development VM; `vessel-test.inp` in `~/test-ai/` has all vessel ICs and HDs set
-
-**snap-melcor (new server, fully functional):**
-- Fixed session.register() signature mismatch
-- Fixed `open_med_model` — `snap.codes.melcor.open_model()` checks for `"MELCOR"` but plugin ID is `"MELCOR2X"`; use `snap.model_editor.open_model()` directly
-- Added `create_model` tool (bootstraps via minimal MELGEN import — no blank-canvas API)
-- Added `add_component` tool with Java `createComponent(jm)` + `addToModel(jm)` pattern
-- Fixed Py4J class name lookup — `type(obj).__name__` always returns `"JavaObject"`; use `obj.getClass().getSimpleName()`
-- Fixed property setters — MELCOR unit-typed setters need CReal get-mutate-set pattern (see snap-melcor quirks below)
-- Added `list_component_properties` tool — returns all setter names via Java reflection
-- Fixed stdout corruption from `snap.codes.melcor` import hijacking `sys.stdout`
-- Built `primary_loop_melcor.med` / `.inp` in `~/test-ai/` using geometry extracted from the TRACE TRCIN
-
----
-
----
-
 ## Architecture overview
 
 ```
@@ -449,6 +50,28 @@ Bootstraps the SNAP Python path and starts MEBatch.
 - Exposes `status()` → dict and `wait_ready(timeout)` used by tools that require SNAP to be up before proceeding.
 
 The thread is daemon so it doesn't prevent process exit if SNAP fails to start.
+
+**Tools wait for startup rather than refusing it.** A tool called before SNAP is ready parks on the
+init thread for up to `SNAP_MCP_STARTUP_WAIT` (default 90 s) and raises only if startup genuinely
+never completes. An earlier design failed fast and told the caller to poll `snap_status()` and
+retry, which an LLM agent cannot act on — it has no clock and no sleep, so it burns turns polling.
+Waiting is also no less safe than refusing: a parked call is blocked on an event, so it cannot
+reach the gateway or trip `reset()` mid-initialization, and unlike a refusal it does not come
+straight back as a retry.
+
+**Gateway access is serialized.** A single `_GATEWAY_LOCK` serializes all tool calls, because the
+Py4J socket is not thread-safe and FastMCP runs synchronous tools on a thread pool. Concurrent
+calls without it corrupt the connection rather than merely racing.
+
+**Recovery relaunches MEBatch in-process.** On a genuine break, `reset()` kills the old JVM once,
+shuts down SNAP's `__MODEL_EDITOR__` singleton, and `find_plugin` relaunches MEBatch in the same
+process; `get_model()` then reloads each model from its autosaved `.med`, so a caller's `model_id`
+survives the restart. Do not kill an in-flight relaunch and do not evict the `snap`/`py4j` modules
+from `sys.modules` to force a clean import — both wedge the process.
+
+The server also logs to `~/.snap_trace/server.log`, recording the real exception plus the tool name
+and arguments whenever a gateway break is detected. That log is the fastest way to distinguish a
+true break from a misclassified Java error.
 
 ---
 
@@ -519,6 +142,15 @@ Dot-path traversal one level deep (e.g. `"fluid_segment.friction_edge_table"`) i
 
 Thin wrappers around `snap_env` and `session`. All tools that need SNAP running call `snap_env.wait_ready()` before proceeding. `open_med_model` and `import_trcin` use SNAP's `trace.open_model()` and `trace.import_ascii()` then hand off to `session.register_model()`.
 
+`list_models` is **summary-first**: the registry is append-only and never pruned, so a long-lived
+install accumulates hundreds of rows and returning all of them buries the caller. It returns the 20
+newest with a true `total`, plus `limit`, `name_contains`, and `detail='full'` for the cases that
+need more.
+
+`path` is accepted as an alias for `med_file_path` and `trcin_path`. Callers guess `path` almost
+every time, and without the alias the validation error names a field the caller never used, which
+reads as a broken tool rather than a wrong argument name.
+
 ---
 
 ## tools/component_tools.py
@@ -544,6 +176,13 @@ All field accesses are individually try/caught so a failure on one field doesn't
 ## tools/connection_tools.py
 
 `connect_components` does a single `setattr(comp, face, (slot, target_cc, cell))` — directly mirroring the SNAP Python API pattern from the standpipe example. The tuple assignment is how SNAP wires junctions.
+
+**The slot is resolved automatically.** The junction slot belongs to the *target*, not the source —
+a distinction callers get wrong almost every time, producing a loop of `InvalidFaceException`.
+`connect_components` now derives it: BREAK/FILL → `[JUN1] Inlet`, pipe → the free end. A wrong or
+blank value is corrected rather than rejected, and the correction is reported back in `slot_note`.
+A target with no free junction returns an actionable message ("a pipe cannot connect both ends to
+the same target…") instead of a raw Py4J trace.
 
 **VESSEL connection quirk:** `connect_components` does NOT work for VESSEL targets. The Java `setMultiJunctionConnection` method does strict string matching on face labels and throws `RuntimeException` for `"[JUN1] Inlet"` when the target is a `VesselComponent`. Use `connect_pipe_to_vessel` instead.
 
@@ -613,6 +252,14 @@ Broadcasting in `_broadcast_vessel_value`: float → uniform; `list[float]` of l
 | Blank junction label maps to `[JUN1] Inlet` | When the raw connection data shows `('', cc, cell)`, the SNAP face name is actually `[JUN1] Inlet`. `connect_components` must use `[JUN1] Inlet`, not `""`. |
 | `FILL.name` has no setter | Setting `name` on a `Fill` object raises "property 'name' of 'Fill' object has no setter". Do not include `name` in `add_component` properties for FILL components. |
 | `HEAT_STRUCTURE.nfax` is a per-cell array | `nfax` (fine mesh nodes per axial cell) cannot be set as a scalar integer — SNAP stores it as an array indexed per cell. Setting it via `add_component` fails with `'int' object is not subscriptable`. Use `set_component_property` with a list (e.g. `[3, 3, 3, 3]` for 4 axial cells) after creation. |
+| A Java error is not a dead gateway | Every `Py4JJavaError` traceback contains the frame `at py4j.GatewayConnection.run`. Substring-matching `"GatewayConnection"` to detect a broken connection therefore fires on *routine* modeling errors — a bad `connect_components` argument would reset a perfectly healthy gateway. Only true network failures count: `Py4JNetworkError`, connection refused, broken pipe. |
+| `"TRACE already loaded"` in the MEBatch log is benign | It appears on every launch and is not evidence of a failed or duplicated start. |
+| Never `pkill -f MEBatch` | The JVM is multi-tenant — several MCP clients can be running their own MEBatch under the same account. Blanket-killing by name takes out other tenants' sessions. Startup and `reset()` reap orphans and own-process JVMs only. |
+| The TRACE plugin jar is signed | A modified or rebuilt jar fails to load: TRACE reports `PluginNotFound: 'TRACE'` and `snap_status` stays `ready:false`. Do not patch the jar — use the Py4J reflection path this server already uses. Keep a pristine copy of the vendor jar alongside the installed one so the original can be restored without a reinstall. |
+| An unreadable jar looks like a plugin bug | If the account running SNAP cannot read the jar, the symptom is `plugin_version: null` rather than a permission error — easy to misdiagnose. Check file permissions before suspecting the plugin. |
+| Wrong `SNAP_PYTHON_PATH` surfaces as a missing attribute | Pointing at a SNAP install whose TRACE plugin predates `new_model` fails at `create_model` with `module 'snap.codes.trace' has no attribute 'new_model'`. It is a version mismatch, not a bug — point at an install with TRACE 4.7.0 or newer. |
+| Optional tool parameters must be declared `T \| None` | Writing `list[str] = None` or `int = None` makes the generated schema advertise a non-null type with a `null` default. Strict MCP clients reject the tool outright. Always spell optional parameters `list[str] \| None = None`. |
+| A one-shot pipe test exits 1 on a healthy server | `printf ... \| server` exits 1 with `server is closing: EOF`. That is normal for MCP servers when stdin closes, and is not evidence the server is broken. |
 
 ---
 
@@ -634,6 +281,30 @@ The server reads three environment variables at startup. For Claude Code, set th
 | `SNAP_TRACE_DB` | `~/.snap_trace/models.db` | SQLite model registry |
 | `SNAP_TRACE_WORKDIR` | `~/.snap_trace/models/` | Working .med file storage |
 | `SNAP_TRACE_TARGET_VERSION` | `V5.0p9` | TRACE binary version being exported for; controls which `_fixup_trcin` patches are applied and the default version used in `create_model` |
+| `SNAP_MCP_STARTUP_WAIT` | `90` | Seconds a tool call will wait for MEBatch startup before raising |
+
+---
+
+## Notes for agent-driven use
+
+This server is built to be driven by an LLM agent, and two properties of that setting shape the
+design more than raw tool speed does.
+
+**Response size is the cost driver, not tool latency.** Wall-clock time for an agent turn tracks
+the number of tokens the model has to emit, so a tool that returns a large payload is expensive
+even when it answered instantly. Asking "how many models are in the registry" and asking "report
+exactly what `list_models` returns" differ by more than an order of magnitude in elapsed time
+against the same call. This is why the read tools are summary-first with opt-in `detail='full'`
+rather than returning everything and letting the caller filter.
+
+**A clean `validate_model` is not proof that a deck runs.** TRACE applies checks SNAP does not.
+Confirm with an actual `run_trace` before reporting success.
+
+**If a client exposes tools under a prefix, use the client's name for them.** Server keys
+containing a hyphen are a known trap: some clients derive the tool name from the key, and a model
+that emits the hyphen back as an underscore gets `tool not found`, retries, and exits successfully
+having printed nothing — with no log line naming the cause. Prefer a key with no hyphen when the
+client's naming scheme is unknown.
 
 ---
 
