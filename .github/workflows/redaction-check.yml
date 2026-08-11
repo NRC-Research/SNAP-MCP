@@ -63,7 +63,7 @@ jobs:
             # -o would print the match itself, so only line numbers are taken.
             while IFS=: read -r lineno _; do
               [ -n "$lineno" ] || continue
-              echo "::error file=$f,line=$lineno::Matches a redaction pattern. Content withheld -- see ~/.config/snap-mcp/redaction-patterns.txt locally."
+              echo "::error file=$f,line=$lineno::Matches a redaction pattern. Content withheld -- check this line against your local pattern file (SNAP_MCP_PATTERNS)."
               failed=1
             done < <(grep -n -i -F -f "$RUNNER_TEMP/patterns.txt" -- "$f" 2>/dev/null || true)
           done

@@ -18,13 +18,19 @@ chmod +x .githooks/*
 git config core.hooksPath .githooks
 echo "Hooks enabled: core.hooksPath -> .githooks"
 
-PATTERNS="${SNAP_MCP_PATTERNS:-$HOME/.config/snap-mcp/redaction-patterns.txt}"
-if [ -s "$PATTERNS" ]; then
-  echo "Pattern file found: $PATTERNS ($(wc -l < "$PATTERNS" | tr -d ' ') patterns)"
+PATTERNS="${SNAP_MCP_PATTERNS:-}"
+if [ -n "$PATTERNS" ] && [ -s "$PATTERNS" ]; then
+  echo "Pattern file found ($(wc -l < "$PATTERNS" | tr -d ' ') patterns)."
+elif [ -n "$PATTERNS" ]; then
+  echo ""
+  echo "WARNING: SNAP_MCP_PATTERNS points at a missing or empty file."
+  echo "  The pre-commit redaction check will refuse to run until it exists."
 else
   echo ""
-  echo "WARNING: no pattern file at $PATTERNS"
-  echo "  The pre-commit redaction check will refuse to run without it."
-  echo "  Create it (one pattern per line, chmod 600) or set SNAP_MCP_PATTERNS."
-  echo "  It must live OUTSIDE this repo -- the denylist is itself sensitive."
+  echo "WARNING: SNAP_MCP_PATTERNS is not set."
+  echo "  Export it from your shell profile, pointing at a file of redaction"
+  echo "  patterns, one per line, mode 600. The pre-commit check will refuse to"
+  echo "  run without it."
+  echo "  Keep that file OUTSIDE this repo -- the denylist is itself sensitive,"
+  echo "  and there is no default path here for the same reason."
 fi
